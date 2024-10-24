@@ -5,8 +5,9 @@ Anders Ohrn, 2024 Oct
 """
 import os
 from typing import Optional, Dict
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, field_validator, root_validator
 import datetime
+import re
 import requests
 
 _URL_ROOT_TFL_API = 'https://api.tfl.gov.uk'
@@ -22,68 +23,70 @@ class JourneyPlannerParams(BaseModel):
     time: Optional[str] = None
     time_is: Optional[str] = Field(None, alias='timeIs')
 
-    @validator('from_location', 'to', 'via')
+
+    @field_validator('from_location', 'to', 'via')
+    @classmethod
     def validate_location(cls, value, field):
         if value is None:
             return value
 
-            # WGS84 coordinates pattern (lat,long)
-            coord_pattern = r'^-?\d+\.?\d*,-?\d+\.?\d*$'
+        # WGS84 coordinates pattern (lat,long)
+        coord_pattern = r'^-?\d+\.?\d*,-?\d+\.?\d*$'
 
-            # UK postcode pattern (basic validation)
-            postcode_pattern = r'^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$'
+        # UK postcode pattern (basic validation)
+        postcode_pattern = r'^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$'
 
-            # Naptan ID pattern (based on common format)
-            naptan_pattern = r'^[0-9]{12}$'
+        # Naptan ID pattern (based on common format)
+        naptan_pattern = r'^[0-9]{12}$'
 
-            # ICS StopId pattern (you might need to adjust this based on actual format)
-            ics_pattern = r'^[A-Z0-9]+$'
+        # ICS StopId pattern (you might need to adjust this based on actual format)
+        ics_pattern = r'^[A-Z0-9]+$'
 
-            # Check if it matches any of the allowed formats
-            if (re.match(coord_pattern, v) or
-                    re.match(postcode_pattern, v.upper()) or
-                    re.match(naptan_pattern, v) or
-                    re.match(ics_pattern, v)):
-                return v
+        # Check if it matches any of the allowed formats
+        if (re.match(coord_pattern, value) or
+            re.match(postcode_pattern, value.upper()) or
+            re.match(naptan_pattern, value) or
+            re.match(ics_pattern, value)):
+            return value
 
-            # If none of the above, accept as free-text string
-            return v
+        # If none of the above, accept as free-text string
+        return value
 
-        @validator('date')
-        def validate_date(cls, v):
-            if v is None:
-                return v
-            try:
-                # Validate date format (yyyyMMdd)
-                datetime.strptime(v, '%Y%m%d')
-                return v
-            except ValueError:
-                raise ValueError('date must be in yyyyMMdd format')
+@field_validator('date')
+def validate_date(cls, v):
+    if v is None:
+        return v
+    try:
+        # Validate date format (yyyyMMdd)
+        datetime.strptime(v, '%Y%m%d')
+        return v
+    except ValueError:
+        raise ValueError('date must be in yyyyMMdd format')
 
-        @validator('time')
-        def validate_time(cls, v):
-            if v is None:
-                return v
-            try:
-                # Validate time format (HHmm)
-                if not re.match(r'^[0-2][0-9][0-5][0-9]$', v):
-                    raise ValueError
-                hour = int(v[:2])
-                minute = int(v[2:])
-                if hour >= 24 or minute >= 60:
-                    raise ValueError
-                return v
-            except ValueError:
-                raise ValueError('time must be in HHmm format (24-hour)')
+@field_validator('time')
+def validate_time(cls, v):
+    if v is None:
+        return v
+    try:
+        # Validate time format (HHmm)
+        if not re.match(r'^[0-2][0-9][0-5][0-9]$', v):
+            raise ValueError
+        hour = int(v[:2])
+        minute = int(v[2:])
+        if hour >= 24 or minute >= 60:
+            raise ValueError
+        return v
+    except ValueError:
+        raise ValueError('time must be in HHmm format (24-hour)')
 
-        @validator('time_is')
-        def validate_time_is(cls, v):
-            if v is None:
-                return v
-            valid_values = ['departing', 'arriving']
-            if v not in valid_values:
-                raise ValueError(f'timeIs must be one of: {", ".join(valid_values)}')
-            return v
+@validator('time_is')
+def validate_time_is(cls, v):
+    if v is None:
+        return v
+    valid_values = ['departing', 'arriving']
+    if v not in valid_values:
+        raise ValueError(f'timeIs must be one of: {", ".join(valid_values)}')
+    return v
 
         # Root validator to check time-related fields consistency
         @root_validator
