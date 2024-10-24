@@ -4,7 +4,7 @@
 from typing import Sequence, Optional
 from enum import Enum
 
-from client import TFLClient
+from tfl_api import TFLClient
 
 class Modes(Enum):
     BUS = 'bus'

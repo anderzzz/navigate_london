@@ -24,9 +24,9 @@ class TFLClient:
 
         """
         if params is None:
-            params = {'app_id': self.app_id, 'app_key': self.app_key}
+            params = {'app_key': self.app_key}
         else:
-            params.update({'app_id': self.app_id, 'app_key': self.app_key})
+            params.update({'app_key': self.app_key})
 
         response = requests.get(f'{_BASE_URL}{endpoint}', params=params)
         response.raise_for_status()

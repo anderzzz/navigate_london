@@ -1,5 +1,5 @@
-from navigate-london.tfl_api.client import TFLClient
-from api import (
+from .client import TFLClient
+from .api import (
     SearchStopPoints,
     JourneyModesAvailable,
 )
