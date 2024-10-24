@@ -3,6 +3,7 @@
 Anders Ohrn, 2024 Oct
 
 """
+import os
 from typing import Optional, Dict
 import requests
 
@@ -13,9 +14,10 @@ class TFLClient:
     """Bla bla
 
     """
-    def __init__(self, app_id, app_key):
-        self.app_id = app_id
-        self.app_key = app_key
+    def __init__(self, env_var_app_key):
+        self.app_key = os.getenv(env_var_app_key)
+        if self.app_key is None:
+            raise ValueError(f'Did not find an app key in environment variable {env_var_app_key}')
 
     def get(self, endpoint, params: Optional[Dict[str, str]] = None):
         """Get data from the TFL API, using the given endpoint and parameters.

@@ -14,6 +14,18 @@ class Modes(Enum):
     RIVER_BUS = 'river-bus'
 
 
+class JourneyModesAvailable:
+    def __init__(self, client: TFLClient):
+        self.client = client
+        self._endpoint = 'Journey/Meta/Modes'
+
+    def __call__(self):
+        """Retrieve all available transportation modes that the journey planner API deals with
+
+        """
+        return self.client.get(self._endpoint)
+
+
 class SearchStopPoints:
     def __init__(self, client: TFLClient):
         self.client = client
