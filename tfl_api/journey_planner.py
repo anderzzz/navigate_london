@@ -1,7 +1,7 @@
 """Select APIs for the TFL API.
 
 """
-from typing import Sequence, Optional, Dict
+from typing import Sequence, Optional, Dict, Union, Tuple
 from enum import Enum
 from pydantic import BaseModel, field_validator
 from datetime import datetime
@@ -164,16 +164,74 @@ class JourneyPlannerSearch:
 #
 # Define the payload post-processing
 #
+def _disambiguate_loc(option, match_thrs) -> Optional[Union[str, Tuple[float, float]]]:
+    if float(option['matchQuality']) < match_thrs:
+        return None
+
+    if 'naptanId' in option['place']:
+        return option['place']['naptanId']
+    elif 'lat' in option['place'] and 'lon' in option['place']:
+        return option['place']['lat'], option['place']['lon']
+    elif 'icsCode' in option['place']:
+        return option['place']['icsCode']
+    else:
+        raise RuntimeError(f'Could not disambiguate location in payload: {option}')
+
+
 class JourneyPlannerSearchPayloadProcessor:
     """Process the payload from the journey planner.
 
     """
     def __init__(self,
-                 allow_disambiguation: bool = True,
                  matching_threshold: float = 900.0,
                  ):
-        self.allow_disambiguation = allow_disambiguation
         self.matching_threshold = matching_threshold
 
-    def __call__(self, payload: Dict):
+        self.MATCH_STATUS_TO_DISAMBIGUATE = ['list']
+        self.MATCH_STATUS_MATCHED = ['identified']
+        self.MATCH_STATUS_EMPTY = ['empty']
 
+        self._loc_from = None
+        self._loc_to = None
+        self._loc_via = None
+
+    def process(self, payload: Dict):
+        """Process the payload from the journey planner.
+
+        """
+        return payload
+
+    def _disambiguate_loc_type(self, type_: str, payload: Dict):
+        ret = []
+        if f'{type_}LocationDisambiguation' in payload:
+            if payload[f'{type_}LocationDisambiguation']['matchStatus'] in self.MATCH_STATUS_TO_DISAMBIGUATE:
+                ret = [_disambiguate_loc(option, self.matching_threshold) for option in payload[f'{type_}LocationDisambiguation']['disambiguationOptions']]
+            elif payload[f'{type_}LocationDisambiguation']['matchStatus'] in self.MATCH_STATUS_MATCHED:
+                ret = [True]
+            elif payload[f'{type_}LocationDisambiguation']['matchStatus'] in self.MATCH_STATUS_EMPTY:
+                ret = [False]
+            else:
+                raise RuntimeError(f'Unknown match status: {payload[f"{type_}LocationDisambiguation"]["matchStatus"]}')
+
+        return [x for x in ret if x is not None]
+
+    def disambiguate(self, payload: Dict):
+        """Disambiguate the payload from the journey planner.
+
+        """
+        self._loc_from = self._disambiguate_loc_type('from', payload)
+        self._loc_to = self._disambiguate_loc_type('to', payload)
+        self._loc_via = self._disambiguate_loc_type('via', payload)
+
+    def transform_loc(self, type_: str, loc):
+        try:
+            val = getattr(self, f'_loc_{type_}')
+        except AttributeError:
+            raise ValueError(f'Unknown location type: {type_}')
+
+        if val[0] is True:
+            return [loc]
+        elif val[0] is False:
+            return [None]
+        else:
+            return val
