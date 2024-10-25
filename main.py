@@ -3,13 +3,20 @@
 """
 from tfl_api import (
     TFLClient,
-    SearchStopPoints,
-    JourneyModesAvailable,
-    Modes
+    JourneyPlannerSearchParams,
+    JourneyPlannerSearch,
 )
 
 client = TFLClient(env_var_app_key='TFL_API_KEY')
-api_modes = JourneyModesAvailable(client)
-print(api_modes())
-stops = SearchStopPoints(client)
-print(stops('london bridge', modes=[Modes.TUBE, Modes.BUS]))
+params = JourneyPlannerSearchParams(
+    date='20241026',
+    time='0800',
+    time_is='departing',
+)
+search = JourneyPlannerSearch(client)
+x = search(
+    from_loc='Hyde Park Corner',
+    to_loc='London Bridge',
+    **params.model_dump(),
+)
+print (x)
