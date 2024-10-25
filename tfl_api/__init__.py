@@ -1,7 +1,6 @@
 from .client import TFLClient
-from .api import (
-    SearchStopPoints,
-    JourneyModesAvailable,
+from .journey_planner import (
     JourneyPlannerSearchParams,
     JourneyPlannerSearch,
+    JourneyPlannerSearchPayloadProcessor,
 )

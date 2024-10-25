@@ -1,13 +1,16 @@
 """Select APIs for the TFL API.
 
 """
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Dict
 from enum import Enum
 from pydantic import BaseModel, field_validator
 from datetime import datetime
 
 from tfl_api import TFLClient
 
+#
+# Define the parameters for the journey planner
+#
 class Mode(str, Enum):
     """The modes of transportation."""
     BUS = "public-bus"
@@ -69,18 +72,6 @@ class TimeIs(str, Enum):
     """Specification on what a time of day denotes."""
     DEPARTING = "departing"
     ARRIVING = "arriving"
-
-
-class JourneyModesAvailable:
-    def __init__(self, client: TFLClient):
-        self.client = client
-        self._endpoint = 'Journey/Meta/Modes'
-
-    def __call__(self):
-        """Retrieve all available transportation modes that the journey planner API deals with.
-
-        """
-        return self.client.get(self._endpoint)
 
 
 class JourneyPlannerSearchParams(BaseModel):
@@ -149,10 +140,14 @@ class JourneyPlannerSearchParams(BaseModel):
         return v
 
 
+#
+# Define and execute the API call for journey planner
+#
 class JourneyPlannerSearch:
     def __init__(self, client: TFLClient):
         self.client = client
         self._endpoint = 'Journey/JourneyResults'
+        self.status_code = None
 
     def __call__(self,
                  from_loc: str,
@@ -162,27 +157,23 @@ class JourneyPlannerSearch:
         
         """
         _url = f'{self._endpoint}/{from_loc}/to/{to_loc}'
-        return self.client.get(_url, params=params)
+        self.status_code, payload = self.client.get(_url, params=params)
+        return payload
 
 
-class SearchStopPoints:
-    def __init__(self, client: TFLClient):
-        self.client = client
-        self._endpoint = 'StopPoint/Search'
+#
+# Define the payload post-processing
+#
+class JourneyPlannerSearchPayloadProcessor:
+    """Process the payload from the journey planner.
 
-    def __call__(self,
-                 query: str,
-                 modes: Optional[Sequence[Mode]] = None,
+    """
+    def __init__(self,
+                 allow_disambiguation: bool = True,
+                 matching_threshold: float = 900.0,
                  ):
-        """Search for stop points, such as bus stops, tube stations, by their common name.
+        self.allow_disambiguation = allow_disambiguation
+        self.matching_threshold = matching_threshold
 
-        Args:
-            query: The search query, a case-insensitive string that will be matched against the common name of the stop points.
+    def __call__(self, payload: Dict):
 
-
-        """
-        params = {'query': query}
-        if modes:
-            params['modes'] = ','.join(mode.value for mode in modes)
-
-        return self.client.get(self._endpoint, params=params)

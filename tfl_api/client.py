@@ -7,11 +7,11 @@ import os
 from typing import Optional, Dict
 import requests
 
-_BASE_URL = 'https://api.tfl.gov.uk/'
+_BASE_URL_TFL = 'https://api.tfl.gov.uk/'
 
 
 class TFLClient:
-    """Bla bla
+    """Basic client to interact with the TFL API.
 
     """
     def __init__(self, env_var_app_key):
@@ -28,7 +28,7 @@ class TFLClient:
         else:
             params.update({'app_key': self.app_key})
 
-        response = requests.get(f'{_BASE_URL}{endpoint}', params=params)
+        response = requests.get(f'{_BASE_URL_TFL}{endpoint}', params=params)
         response.raise_for_status()
 
-        return response.json()
+        return response.status_code, response.json()
