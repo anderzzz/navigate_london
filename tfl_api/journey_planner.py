@@ -205,8 +205,8 @@ class JourneyPlannerSearchPayloadProcessor:
         """
         for journey in payload['journeys']:
             ret = {
-                'start': journey['startDateTime'],
-                'end': journey['endDateTime'],
+                'start_date_time': journey['startDateTime'],
+                'end_date_time': journey['endDateTime'],
                 'duration': journey['duration'],
             }
             leg_ = {}
