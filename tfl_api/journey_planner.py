@@ -168,12 +168,12 @@ def _disambiguate_loc(option, match_thrs) -> Optional[Union[str, Tuple[float, fl
     if float(option['matchQuality']) < match_thrs:
         return None
 
-    if 'naptanId' in option['place']:
-        return option['place']['naptanId']
+    if 'icsCode' in option['place']:
+        return option['place']['icsCode']
     elif 'lat' in option['place'] and 'lon' in option['place']:
         return option['place']['lat'], option['place']['lon']
-    elif 'icsCode' in option['place']:
-        return option['place']['icsCode']
+    elif 'naptanId' in option['place']:
+        return option['place']['naptanId']
     else:
         raise RuntimeError(f'Could not disambiguate location in payload: {option}')
 

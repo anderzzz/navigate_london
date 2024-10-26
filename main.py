@@ -14,10 +14,10 @@ from navigator import (
 client = TFLClient(env_var_app_key='TFL_API_KEY')
 planner = Planner(
     planner=JourneyPlannerSearch(client),
-    payload_processor=JourneyPlannerSearchPayloadProcessor(matching_threshold=900.0),
+    payload_processor=JourneyPlannerSearchPayloadProcessor(matching_threshold=950.0),
 )
 params = JourneyPlannerSearchParams(
-    date='20241026',
+    date='20241028',
     time='0800',
     time_is='departing',
 )
