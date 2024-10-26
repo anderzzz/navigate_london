@@ -7,6 +7,7 @@ from pydantic import BaseModel, field_validator
 from datetime import datetime
 
 from tfl_api import TFLClient
+from utils import slice_dict
 
 #
 # Define the parameters for the journey planner
@@ -195,11 +196,33 @@ class JourneyPlannerSearchPayloadProcessor:
         self._loc_to = None
         self._loc_via = None
 
-    def process(self, payload: Dict):
+    def journeys(self,
+                 payload: Dict,
+                 leg_data_to_retrieve: Optional[Sequence[Sequence[str]]] = None
+                 ):
         """Process the payload from the journey planner.
 
         """
-        return payload
+        for journey in payload['journeys']:
+            ret = {
+                'start': journey['startDateTime'],
+                'end': journey['endDateTime'],
+                'duration': journey['duration'],
+            }
+            leg_ = {}
+            for leg in journey['legs']:
+                if leg_data_to_retrieve is not None:
+                    leg_data = slice_dict(leg, leg_data_to_retrieve)
+                    leg_.update(leg_data)
+            ret['legs'] = leg_
+
+            yield ret
+
+    def journey_vectors(self, payload: Dict):
+        """Retrieve the journey vectors from the payload.
+
+        """
+        pass
 
     def _disambiguate_loc_type(self, type_: str, payload: Dict):
         ret = []
