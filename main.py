@@ -14,7 +14,14 @@ from navigator import (
 client = TFLClient(env_var_app_key='TFL_API_KEY')
 planner = Planner(
     planner=JourneyPlannerSearch(client),
-    payload_processor=JourneyPlannerSearchPayloadProcessor(matching_threshold=950.0),
+    payload_processor=JourneyPlannerSearchPayloadProcessor(
+        matching_threshold=950.0,
+        leg_data_to_retrieve=(
+            'start of leg, date and time',
+            'end of leg, date and time',
+            'mode of transport',
+        ),
+    ),
 )
 params = JourneyPlannerSearchParams(
     date='20241028',

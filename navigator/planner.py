@@ -64,12 +64,7 @@ class Planner:
         payload = self.journey_planner(from_loc, to_loc, **params)
 
         if self.journey_planner.status_code == 200:
-            return [
-                Plan(**journey) for journey in self.payload_processor.journeys(
-                    payload=payload,
-                    leg_data_to_retrieve=self.leg_data_to_retrieve
-                )
-            ]
+            return [Plan(**journey) for journey in self.payload_processor.journeys(payload=payload)]
 
         elif self.journey_planner.status_code == 300:
             if _recursive_depth == 1:

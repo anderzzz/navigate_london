@@ -36,7 +36,7 @@ def slice_dict(data: Dict, key_paths: Sequence[Sequence[str]]) -> Dict:
         # Returns: {"user": {"name": "John", "address": {"city": "New York"}}}
     """
 
-    def get_nested_value(d: Dict, path: List[str]) -> Union[Dict, Any]:
+    def get_nested_value(d: Dict, path: Sequence[str]) -> Union[Dict, Any]:
         """Helper function to get a value from a nested dictionary."""
         current = d
         for key in path[:-1]:  # All but the last key
@@ -61,7 +61,7 @@ def slice_dict(data: Dict, key_paths: Sequence[Sequence[str]]) -> Dict:
                 result[key] = value
         return result
 
-    def build_nested_dict(path: List[str], value: Any) -> Dict:
+    def build_nested_dict(path: Sequence[str], value: Any) -> Dict:
         """Helper function to build a nested dictionary from a path and value."""
         if not path:
             return value

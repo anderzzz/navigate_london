@@ -3,6 +3,7 @@
 """
 from typing import Sequence, Optional, Dict, Union, Tuple
 from enum import Enum
+from dataclasses import dataclass
 from pydantic import BaseModel, field_validator
 from datetime import datetime
 
@@ -10,7 +11,7 @@ from tfl_api import TFLClient
 from utils import slice_dict
 
 #
-# Define the parameters for the journey planner
+# Search parameters and functionality for the Journey Planner
 #
 class Mode(str, Enum):
     """The modes of transportation."""
@@ -141,9 +142,6 @@ class JourneyPlannerSearchParams(BaseModel):
         return v
 
 
-#
-# Define and execute the API call for journey planner
-#
 class JourneyPlannerSearch:
     def __init__(self, client: TFLClient):
         self.client = client
@@ -163,8 +161,33 @@ class JourneyPlannerSearch:
 
 
 #
-# Define the payload post-processing
+# Output payload processing parameter and functionality for the Journey Planner
 #
+
+@dataclass
+class FieldMapping:
+    target_field: str
+    source_path: str
+    description: str
+
+
+JOURNEY_MAIN_DATA = [
+    FieldMapping('start of journey, date and time', 'startDateTime', 'The start date and time of the journey'),
+    FieldMapping('end of journey, date and time', 'arrivalDateTime', 'The end date and time of the journey'),
+    FieldMapping('duration of journey (minutes)', 'duration', 'The duration of the journey in minutes'),
+]
+JOURNEY_LEG_DATA = [
+    FieldMapping('start of leg, date and time', 'departureTime', 'The start date and time of the leg'),
+    FieldMapping('end of leg, date and time', 'arrivalTime', 'The end date and time of the leg'),
+    FieldMapping('duration of leg (minutes)', 'duration', 'The duration of the leg in minutes'),
+    FieldMapping('instruction of leg', 'instruction.detailed', 'The instruction for the leg'),
+    FieldMapping('departure point of leg', 'departurePoint.commonName', 'The departure point of the leg'),
+    FieldMapping('arrival point of leg', 'arrivalPoint.commonName', 'The arrival point of the leg'),
+    FieldMapping('mode of transport', 'mode.name', 'The mode of transport for the leg'),
+]
+
+
+
 def _disambiguate_loc(option, match_thrs) -> Optional[Union[str, Tuple[float, float]]]:
     if float(option['matchQuality']) < match_thrs:
         return None
@@ -185,8 +208,13 @@ class JourneyPlannerSearchPayloadProcessor:
     """
     def __init__(self,
                  matching_threshold: float = 900.0,
+                 leg_data_to_retrieve: Sequence[str] = ('mode of transport',),
                  ):
         self.matching_threshold = matching_threshold
+        self.leg_data_to_retrieve = leg_data_to_retrieve
+        for field in self.leg_data_to_retrieve:
+            if not any(field in mapping.target_field for mapping in JOURNEY_LEG_DATA):
+                raise ValueError(f'Unknown field to retrieve: {field}')
 
         self.MATCH_STATUS_TO_DISAMBIGUATE = ['list']
         self.MATCH_STATUS_MATCHED = ['identified']
@@ -195,28 +223,36 @@ class JourneyPlannerSearchPayloadProcessor:
         self._loc_from = None
         self._loc_to = None
         self._loc_via = None
+        self._payload_description = {}
 
     def journeys(self,
                  payload: Dict,
-                 leg_data_to_retrieve: Optional[Sequence[Sequence[str]]] = None
                  ):
         """Process the payload from the journey planner.
 
         """
         for journey in payload['journeys']:
-            ret = {
-                'start_date_time': journey['startDateTime'],
-                'end_date_time': journey['endDateTime'],
-                'duration': journey['duration'],
-            }
-            leg_ = {}
-            for leg in journey['legs']:
-                if leg_data_to_retrieve is not None:
-                    leg_data = slice_dict(leg, leg_data_to_retrieve)
-                    leg_.update(leg_data)
-            ret['legs'] = leg_
+            j_data = slice_dict(journey, [field.source_path.split('.') for field in JOURNEY_MAIN_DATA])
+            j_data = {field.target_field: j_data[field.source_path] for field in JOURNEY_MAIN_DATA}
+            self._payload_description.update(
+                {field.target_field: field.description for field in JOURNEY_MAIN_DATA}
+            )
 
-            yield ret
+            legs = []
+            for leg in journey['legs']:
+                leg_data = {}
+                for leg_data_key in self.leg_data_to_retrieve:
+                    try:
+                        source_path = next(mapping.source_path for mapping in JOURNEY_LEG_DATA if mapping.target_field == leg_data_key)
+                    except StopIteration:
+                        raise ValueError(f'Unknown field to retrieve: {leg_data_key}')
+
+                    leg_data_value = slice_dict(leg, [source_path.split('.')])
+                    leg_data[leg_data_key] = leg_data_value
+                legs.append(leg_data)
+            j_data['legs'] = legs
+
+            yield j_data
 
     def journey_vectors(self, payload: Dict):
         """Retrieve the journey vectors from the payload.
