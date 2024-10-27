@@ -20,6 +20,8 @@ planner = Planner(
             'start of leg, date and time',
             'end of leg, date and time',
             'mode of transport',
+            'departure point of leg',
+            'arrival point of leg',
         ),
     ),
 )

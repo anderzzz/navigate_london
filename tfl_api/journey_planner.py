@@ -1,7 +1,7 @@
 """Select APIs for the TFL API.
 
 """
-from typing import Sequence, Optional, Dict, Union, Tuple
+from typing import Sequence, Optional, Dict, Union, Tuple, Any
 from enum import Enum
 from dataclasses import dataclass
 from pydantic import BaseModel, field_validator
@@ -201,6 +201,9 @@ def _disambiguate_loc(option, match_thrs) -> Optional[Union[str, Tuple[float, fl
     else:
         raise RuntimeError(f'Could not disambiguate location in payload: {option}')
 
+def _get_nested_value(d: Dict, path: Sequence[str]) -> Any:
+    """Helper function to get a value from a nested dictionary."""
+    return _get_nested_value(d.get(path[0], {}), path[1:]) if path else d
 
 class JourneyPlannerSearchPayloadProcessor:
     """Process the payload from the journey planner.
@@ -232,8 +235,10 @@ class JourneyPlannerSearchPayloadProcessor:
 
         """
         for journey in payload['journeys']:
-            j_data = slice_dict(journey, [field.source_path.split('.') for field in JOURNEY_MAIN_DATA])
-            j_data = {field.target_field: j_data[field.source_path] for field in JOURNEY_MAIN_DATA}
+            j_data = {
+                field.target_field: _get_nested_value(journey, field.source_path.split('.'))
+                for field in JOURNEY_MAIN_DATA
+            }
             self._payload_description.update(
                 {field.target_field: field.description for field in JOURNEY_MAIN_DATA}
             )
@@ -247,7 +252,7 @@ class JourneyPlannerSearchPayloadProcessor:
                     except StopIteration:
                         raise ValueError(f'Unknown field to retrieve: {leg_data_key}')
 
-                    leg_data_value = slice_dict(leg, [source_path.split('.')])
+                    leg_data_value = _get_nested_value(leg, source_path.split('.'))
                     leg_data[leg_data_key] = leg_data_value
                 legs.append(leg_data)
             j_data['legs'] = legs
