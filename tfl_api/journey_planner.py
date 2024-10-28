@@ -8,7 +8,6 @@ from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import datetime
 
 from tfl_api import TFLClient
-from utils import slice_dict
 
 #
 # Search parameters and functionality for the Journey Planner
@@ -183,6 +182,7 @@ JOURNEY_MAIN_DATA = [
     FieldMapping('start_date_time', 'startDateTime', 'The start date and time of the journey'),
     FieldMapping('end_date_time', 'arrivalDateTime', 'The end date and time of the journey'),
     FieldMapping('duration', 'duration', 'The duration of the journey in minutes'),
+    FieldMapping('legs', 'legs', 'The sequence of legs or stages in the journey'),
 ]
 JOURNEY_LEG_DATA = [
     FieldMapping('start_date_time', 'departureTime', 'The start date and time of the leg'),
@@ -201,6 +201,13 @@ JOURNEY_STEP_DATA = [
     FieldMapping('direction', 'skyDirectionDescription', 'The direction of the step to take'),
 ]
 
+
+def get_description_for_field_(field: str):
+    """Helper function to get a description for a field."""
+    for mapping in JOURNEY_MAIN_DATA + JOURNEY_LEG_DATA + JOURNEY_STEP_DATA:
+        if mapping.target_field == field:
+            return mapping.description
+    raise ValueError(f'Unknown field: {field}')
 
 
 def _disambiguate_loc(option, match_thrs) -> Optional[Union[str, Tuple[float, float]]]:
@@ -249,7 +256,6 @@ class JourneyPlannerSearchPayloadProcessor:
 
         self._loc_from = None
         self._loc_to = None
-        self._payload_description = {}
 
     def journeys(self,
                  payload: Dict,
@@ -265,9 +271,6 @@ class JourneyPlannerSearchPayloadProcessor:
                 field.target_field: _get_nested_value(journey, field.source_path.split('.'))
                 for field in JOURNEY_MAIN_DATA
             }
-            self._payload_description.update(
-                {field.target_field: field.description for field in JOURNEY_MAIN_DATA}
-            )
 
             legs = []
             for leg in journey['legs']:
@@ -282,10 +285,6 @@ class JourneyPlannerSearchPayloadProcessor:
                     if leg_data_key == 'instruction_steps':
                         leg_data_value = self._collect_step_data(leg_data_value)
                     leg_data[leg_data_key] = leg_data_value
-
-                    self._payload_description.update(
-                        {leg_data_key: next(mapping.description for mapping in JOURNEY_LEG_DATA if mapping.target_field == leg_data_key)}
-                    )
 
                 legs.append(leg_data)
             j_data['legs'] = legs
@@ -305,16 +304,9 @@ class JourneyPlannerSearchPayloadProcessor:
                 step_data_value = _get_nested_value(step, source_path.split('.'))
                 step_data[step_data_key] = step_data_value
 
-                self._payload_description.update(
-                    {step_data_key: next(mapping.description for mapping in JOURNEY_STEP_DATA if mapping.target_field == step_data_key)}
-                )
             ret.append(step_data)
 
         return ret
-
-    @property
-    def payload_description(self):
-        return self._payload_description
 
     def journey_vectors(self, payload: Dict):
         """Retrieve the journey vectors from the payload.

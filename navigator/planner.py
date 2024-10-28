@@ -2,14 +2,24 @@
 
 """
 from typing import Sequence, Dict, Optional, Union, List
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import itertools
+import json
 
 from tfl_api import (
     JourneyPlannerSearchParams,
     JourneyPlannerSearch,
     JourneyPlannerSearchPayloadProcessor,
+    get_description_for_field_
 )
+
+
+def _filter_none(value):
+    if isinstance(value, list):
+        return [_filter_none(v) for v in value]
+    elif isinstance(value, dict):
+        return {k: _filter_none(v) for k, v in value.items() if v is not None}
+    return value
 
 
 @dataclass
@@ -35,7 +45,7 @@ class JourneyLeg:
     mode_transport: str
     duration: Optional[int] = None
     instruction: Optional[str] = None
-    steps: Sequence[JourneyLegStep] = None
+    instruction_steps: Sequence[JourneyLegStep] = None
 
 
 @dataclass
@@ -50,6 +60,28 @@ class Plan:
 
     def from_where_to_where(self) -> (str, str):
         return self.legs[0].departure_point, self.legs[-1].arrival_point
+
+    def to_dict(self):
+        return _filter_none(asdict(self))
+
+    def to_json(self, **kwargs):
+        return json.dumps(self.to_dict(), **kwargs)
+
+    @property
+    def field_description(self):
+        def _collect_keys(dd, keys_=None):
+            if keys_ is None:
+                keys_ = set()
+            if isinstance(dd, dict):
+                for k, v in dd.items():
+                    keys_.add(k)
+                    _collect_keys(v, keys_)
+            elif isinstance(dd, list):
+                for v in dd:
+                    _collect_keys(v, keys_)
+            return keys_
+        keys = _collect_keys(self.to_dict())
+        return {k: get_description_for_field_(k) for k in keys}
 
     @classmethod
     def create_from_payload(cls, journey: Dict):
@@ -69,7 +101,7 @@ class Plan:
                     departure_point=leg.get('departure_point'),
                     arrival_point=leg.get('arrival_point'),
                     mode_transport=leg.get('mode_transport'),
-                    steps=[
+                    instruction_steps=[
                         JourneyLegStep(
                             description_heading=step.get('description_heading'),
                             description=step.get('description'),
@@ -152,6 +184,12 @@ class Journey:
     def __iter__(self):
         return iter(self.plans)
 
+    def to_dict(self):
+        return _filter_none(asdict(self))
+
+    def to_json(self, **kwargs):
+        return json.dumps(self.to_dict(), **kwargs)
+
 
 class JourneyMaker:
     """Bla bla
@@ -167,11 +205,22 @@ class JourneyMaker:
         self.default_params = default_params
 
         self.is_multiple_journeys = False
+        self._journey = None
+
+    def __getitem__(self, item):
+        return self._journey[item]
+
+    def __len__(self):
+        return len(self._journey)
+
+    @property
+    def payload_description(self):
+        return self.planner.payload_processor.payload_description
 
     def make_journey(self,
                      starting_point: str,
                      destination: str,
-                     **kwargs) -> List[Journey]:
+                     **kwargs):
         """Make a journey between two locations
 
         """
@@ -189,6 +238,6 @@ class JourneyMaker:
                 self.is_multiple_journeys = False
                 plans = [plans]
 
-        return [Journey(plans=_plans) for _plans in plans]
+        self._journey = [Journey(plans=_plans) for _plans in plans]
 
 
