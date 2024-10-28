@@ -189,9 +189,16 @@ JOURNEY_LEG_DATA = [
     FieldMapping('end_date_time', 'arrivalTime', 'The end date and time of the leg'),
     FieldMapping('duration', 'duration', 'The duration of the leg in minutes'),
     FieldMapping('instruction', 'instruction.detailed', 'The instruction for the leg'),
+    FieldMapping('instruction_steps', 'instruction.steps', 'The steps to take for the leg'),
     FieldMapping('departure_point', 'departurePoint.commonName', 'The departure point of the leg'),
     FieldMapping('arrival_point', 'arrivalPoint.commonName', 'The arrival point of the leg'),
     FieldMapping('mode_transport', 'mode.name', 'The mode of transport for the leg'),
+]
+JOURNEY_STEP_DATA = [
+    FieldMapping('description_heading', 'descriptionHeading', 'The heading of the step to take'),
+    FieldMapping('description', 'description', 'The description of the step to take'),
+    FieldMapping('distance', 'distance', 'The distance of the step to take'),
+    FieldMapping('direction', 'skyDirectionDescription', 'The direction of the step to take'),
 ]
 
 
@@ -227,9 +234,11 @@ class JourneyPlannerSearchPayloadProcessor:
     def __init__(self,
                  matching_threshold: float = 900.0,
                  leg_data_to_retrieve: Sequence[str] = ('mode of transport',),
+                 step_data_to_retrieve: Sequence[str] = ('descriptionHeading', 'description', 'distance', 'skyDirectionDescription'),
                  ):
         self.matching_threshold = matching_threshold
         self.leg_data_to_retrieve = leg_data_to_retrieve
+        self.step_data_to_retrieve = step_data_to_retrieve
         for field in self.leg_data_to_retrieve:
             if not any(field in mapping.target_field for mapping in JOURNEY_LEG_DATA):
                 raise ValueError(f'Unknown field to retrieve: {field}')
@@ -270,15 +279,38 @@ class JourneyPlannerSearchPayloadProcessor:
                         raise ValueError(f'Unknown field to retrieve: {leg_data_key}')
 
                     leg_data_value = _get_nested_value(leg, source_path.split('.'))
+                    if leg_data_key == 'instruction_steps':
+                        leg_data_value = self._collect_step_data(leg_data_value)
                     leg_data[leg_data_key] = leg_data_value
 
                     self._payload_description.update(
                         {leg_data_key: next(mapping.description for mapping in JOURNEY_LEG_DATA if mapping.target_field == leg_data_key)}
                     )
+
                 legs.append(leg_data)
             j_data['legs'] = legs
 
             yield j_data
+
+    def _collect_step_data(self, steps: Sequence[Dict]):
+        ret = []
+        for step in steps:
+            step_data = {}
+            for step_data_key in self.step_data_to_retrieve:
+                try:
+                    source_path = next(mapping.source_path for mapping in JOURNEY_STEP_DATA if mapping.target_field == step_data_key)
+                except StopIteration:
+                    raise ValueError(f'Unknown field to retrieve: {step_data_key}')
+
+                step_data_value = _get_nested_value(step, source_path.split('.'))
+                step_data[step_data_key] = step_data_value
+
+                self._payload_description.update(
+                    {step_data_key: next(mapping.description for mapping in JOURNEY_STEP_DATA if mapping.target_field == step_data_key)}
+                )
+            ret.append(step_data)
+
+        return ret
 
     @property
     def payload_description(self):

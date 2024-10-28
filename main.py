@@ -26,14 +26,20 @@ planner = Planner(
             'mode_transport',
             'departure_point',
             'arrival_point',
-            'duration',
+#            'duration',
             'instruction',
+            'instruction_steps',
+        ),
+        step_data_to_retrieve=(
+            'description',
+            'description_heading',
         ),
     ),
 )
 params = JourneyPlannerSearchParams(
     walking_speed='fast',
     time_is='arriving',
+    cycle_preference='allTheWay',
 )
 maker = JourneyMaker(planner=planner, default_params=params)
 x = maker.make_journey(

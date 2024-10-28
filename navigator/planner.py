@@ -13,6 +13,17 @@ from tfl_api import (
 
 
 @dataclass
+class JourneyLegStep:
+    """A step of a journey leg
+
+    """
+    description_heading: Optional[str] = None
+    description: Optional[str] = None
+    distance: Optional[str] = None
+    direction: Optional[str] = None
+
+
+@dataclass
 class JourneyLeg:
     """A leg of a journey
 
@@ -24,6 +35,7 @@ class JourneyLeg:
     mode_transport: str
     duration: Optional[int] = None
     instruction: Optional[str] = None
+    steps: Sequence[JourneyLegStep] = None
 
 
 @dataclass
@@ -56,7 +68,15 @@ class Plan:
                     instruction=leg.get('instruction'),
                     departure_point=leg.get('departure_point'),
                     arrival_point=leg.get('arrival_point'),
-                    mode_transport=leg.get('mode_transport')
+                    mode_transport=leg.get('mode_transport'),
+                    steps=[
+                        JourneyLegStep(
+                            description_heading=step.get('description_heading'),
+                            description=step.get('description'),
+                            direction=step.get('direction'),
+                            distance=step.get('distance'),
+                        ) for step in leg.get('instruction_steps', [])
+                    ]
                 ) for leg in journey['legs']
             ]
         )
