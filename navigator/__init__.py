@@ -1,1 +1,6 @@
-from .planner import Planner, Plan
+from .planner import (
+    Planner,
+    Plan,
+    Journey,
+    JourneyMaker,
+)

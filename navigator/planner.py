@@ -1,7 +1,7 @@
 """Bla bla
 
 """
-from typing import Sequence, Dict, Optional
+from typing import Sequence, Dict, Optional, Union, List
 from dataclasses import dataclass
 import itertools
 
@@ -36,6 +36,9 @@ class Plan:
     legs: Sequence[JourneyLeg]
     duration: Optional[int] = None
 
+    def from_where_to_where(self) -> (str, str):
+        return self.legs[0].departure_point, self.legs[-1].arrival_point
+
     @classmethod
     def create_from_payload(cls, journey: Dict):
         """Create a Plan object from a payload
@@ -59,6 +62,7 @@ class Plan:
         )
 
 
+
 class Planner:
     """The planner of journeys
 
@@ -76,7 +80,7 @@ class Planner:
                   from_loc: str,
                   to_loc: str,
                   _recursive_depth: int = 0,
-                  **params):
+                  **params) -> Union[Plan, List[Plan]]:
         """Plan a journey between two locations, given a set of preferences and times.
 
         """
@@ -106,3 +110,58 @@ class Planner:
             ]
         else:
             raise RuntimeError(f'Unexpected status code {self.journey_planner.status_code}')
+
+
+@dataclass
+class Journey:
+    plans: Sequence[Plan]
+
+    @property
+    def starting_point_name(self):
+        return self.plans[0].legs[0].departure_point
+
+    @property
+    def destination_name(self):
+        return self.plans[0].legs[-1].arrival_point
+
+    @property
+    def n_plans(self):
+        return len(self.plans)
+
+    def __getitem__(self, item):
+        return self.plans[item]
+
+    def __iter__(self):
+        return iter(self.plans)
+
+
+class JourneyMaker:
+    """Bla bla
+
+    """
+    def __init__(self,
+                 planner: Planner,
+                 ):
+        self.planner = planner
+
+        self.is_multiple_journeys = False
+
+    def make_journey(self,
+                     starting_point: str,
+                     destination: str,
+                     params: JourneyPlannerSearchParams) -> List[Journey]:
+        plans = self.planner.make_plan(
+            from_loc=starting_point,
+            to_loc=destination,
+            **params.model_dump()
+        )
+        if isinstance(plans, list):
+            if isinstance(plans[0], list):
+                self.is_multiple_journeys = True
+            else:
+                self.is_multiple_journeys = False
+                plans = [plans]
+
+        return [Journey(plans=_plans) for _plans in plans]
+
+

@@ -9,6 +9,7 @@ from tfl_api import (
 )
 from navigator import (
     Planner,
+    JourneyMaker,
 )
 
 client = TFLClient(env_var_app_key='TFL_API_KEY')
@@ -27,14 +28,15 @@ planner = Planner(
         ),
     ),
 )
+maker = JourneyMaker(planner=planner)
 params = JourneyPlannerSearchParams(
     date='20241028',
     time='1800',
     time_is='departing',
 )
-x = planner.make_plan(
-    from_loc='490000119F',
-    to_loc='London Bridge',
-    **params.model_dump(),
+x = maker.make_journey(
+    starting_point='490000119F',
+    destination='London Bridge',
+    params=params,
 )
 print (x)
