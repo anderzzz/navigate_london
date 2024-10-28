@@ -1,7 +1,7 @@
 """Bla bla
 
 """
-from typing import Sequence
+from typing import Sequence, Dict, Optional
 from dataclasses import dataclass
 import itertools
 
@@ -17,16 +17,13 @@ class JourneyLeg:
     """A leg of a journey
 
     """
-    mode_name: str
     start_date_time: str
     end_date_time: str
-    duration: int
-    from_loc: str
-    to_loc: str
-    line_name: str
-    line_destination: str
-    line_direction: str
-    line_service: str
+    departure_point: str
+    arrival_point: str
+    mode_transport: str
+    duration: Optional[int] = None
+    instruction: Optional[str] = None
 
 
 @dataclass
@@ -36,8 +33,30 @@ class Plan:
     """
     start_date_time: str
     end_date_time: str
-    duration: int
     legs: Sequence[JourneyLeg]
+    duration: Optional[int] = None
+
+    @classmethod
+    def create_from_payload(cls, journey: Dict):
+        """Create a Plan object from a payload
+
+        """
+        return Plan(
+            start_date_time=journey.get('start_date_time'),
+            end_date_time=journey.get('end_date_time'),
+            duration=journey.get('duration'),
+            legs=[
+                JourneyLeg(
+                    start_date_time=leg.get('start_date_time'),
+                    end_date_time=leg.get('end_date_time'),
+                    duration=leg.get('duration'),
+                    instruction=leg.get('instruction'),
+                    departure_point=leg.get('departure_point'),
+                    arrival_point=leg.get('arrival_point'),
+                    mode_transport=leg.get('mode_transport')
+                ) for leg in journey['legs']
+            ]
+        )
 
 
 class Planner:
@@ -64,7 +83,7 @@ class Planner:
         payload = self.journey_planner(from_loc, to_loc, **params)
 
         if self.journey_planner.status_code == 200:
-            return [Plan(**journey) for journey in self.payload_processor.journeys(payload=payload)]
+            return [Plan.create_from_payload(journey) for journey in self.payload_processor.journeys(payload=payload)]
 
         elif self.journey_planner.status_code == 300:
             if _recursive_depth == 1:

@@ -1,7 +1,7 @@
 """Select APIs for the TFL API.
 
 """
-from typing import Sequence, Optional, Dict, Union, Tuple, Any
+from typing import Sequence, Optional, Dict, Union, Tuple, Any, Generator, List
 from enum import Enum
 from dataclasses import dataclass
 from pydantic import BaseModel, field_validator
@@ -149,15 +149,23 @@ class JourneyPlannerSearch:
         self.status_code = None
 
     def __call__(self,
-                 from_loc: str,
-                 to_loc: str,
+                 from_loc: Union[str, Tuple[float, float]],
+                 to_loc: Union[str, Tuple[float, float]],
                  **params):
         """Plan a journey between two locations, given a set of preferences and times.
         
         """
+        from_loc = self._normalize_loc(from_loc)
+        to_loc = self._normalize_loc(to_loc)
         _url = f'{self._endpoint}/{from_loc}/to/{to_loc}'
         self.status_code, payload = self.client.get(_url, params=params)
         return payload
+
+    @staticmethod
+    def _normalize_loc(loc):
+        if isinstance(loc, tuple):
+            return f'{loc[0]},{loc[1]}'
+        return loc
 
 
 #
@@ -172,23 +180,28 @@ class FieldMapping:
 
 
 JOURNEY_MAIN_DATA = [
-    FieldMapping('start of journey, date and time', 'startDateTime', 'The start date and time of the journey'),
-    FieldMapping('end of journey, date and time', 'arrivalDateTime', 'The end date and time of the journey'),
-    FieldMapping('duration of journey (minutes)', 'duration', 'The duration of the journey in minutes'),
+    FieldMapping('start_date_time', 'startDateTime', 'The start date and time of the journey'),
+    FieldMapping('end_date_time', 'arrivalDateTime', 'The end date and time of the journey'),
+    FieldMapping('duration', 'duration', 'The duration of the journey in minutes'),
 ]
 JOURNEY_LEG_DATA = [
-    FieldMapping('start of leg, date and time', 'departureTime', 'The start date and time of the leg'),
-    FieldMapping('end of leg, date and time', 'arrivalTime', 'The end date and time of the leg'),
-    FieldMapping('duration of leg (minutes)', 'duration', 'The duration of the leg in minutes'),
-    FieldMapping('instruction of leg', 'instruction.detailed', 'The instruction for the leg'),
-    FieldMapping('departure point of leg', 'departurePoint.commonName', 'The departure point of the leg'),
-    FieldMapping('arrival point of leg', 'arrivalPoint.commonName', 'The arrival point of the leg'),
-    FieldMapping('mode of transport', 'mode.name', 'The mode of transport for the leg'),
+    FieldMapping('start_date_time', 'departureTime', 'The start date and time of the leg'),
+    FieldMapping('end_date_time', 'arrivalTime', 'The end date and time of the leg'),
+    FieldMapping('duration', 'duration', 'The duration of the leg in minutes'),
+    FieldMapping('instruction', 'instruction.detailed', 'The instruction for the leg'),
+    FieldMapping('departure_point', 'departurePoint.commonName', 'The departure point of the leg'),
+    FieldMapping('arrival_point', 'arrivalPoint.commonName', 'The arrival point of the leg'),
+    FieldMapping('mode_transport', 'mode.name', 'The mode of transport for the leg'),
 ]
 
 
 
 def _disambiguate_loc(option, match_thrs) -> Optional[Union[str, Tuple[float, float]]]:
+    """Given that the TFL API returns a list of disambiguation options, select the data that allows
+    another search to be performed. Stations are best identified by their ics codes, while locations
+    generally by their lat/lon coordinates.
+
+    """
     if float(option['matchQuality']) < match_thrs:
         return None
 
@@ -201,9 +214,11 @@ def _disambiguate_loc(option, match_thrs) -> Optional[Union[str, Tuple[float, fl
     else:
         raise RuntimeError(f'Could not disambiguate location in payload: {option}')
 
+
 def _get_nested_value(d: Dict, path: Sequence[str]) -> Any:
     """Helper function to get a value from a nested dictionary."""
     return _get_nested_value(d.get(path[0], {}), path[1:]) if path else d
+
 
 class JourneyPlannerSearchPayloadProcessor:
     """Process the payload from the journey planner.
@@ -230,8 +245,11 @@ class JourneyPlannerSearchPayloadProcessor:
 
     def journeys(self,
                  payload: Dict,
-                 ):
-        """Process the payload from the journey planner.
+                 ) -> Generator[Dict[str, List[Dict]], None, None]:
+        """Process a non-ambiguous payload from the journey planner.
+
+        Select items from the nested and complex payload are extracted and yielded as a dictionary for
+        each journey alternative.
 
         """
         for journey in payload['journeys']:
@@ -254,10 +272,18 @@ class JourneyPlannerSearchPayloadProcessor:
 
                     leg_data_value = _get_nested_value(leg, source_path.split('.'))
                     leg_data[leg_data_key] = leg_data_value
+
+                    self._payload_description.update(
+                        {leg_data_key: next(mapping.description for mapping in JOURNEY_LEG_DATA if mapping.target_field == leg_data_key)}
+                    )
                 legs.append(leg_data)
             j_data['legs'] = legs
 
             yield j_data
+
+    @property
+    def payload_description(self):
+        return self._payload_description
 
     def journey_vectors(self, payload: Dict):
         """Retrieve the journey vectors from the payload.

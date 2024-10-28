@@ -15,19 +15,21 @@ client = TFLClient(env_var_app_key='TFL_API_KEY')
 planner = Planner(
     planner=JourneyPlannerSearch(client),
     payload_processor=JourneyPlannerSearchPayloadProcessor(
-        matching_threshold=950.0,
+        matching_threshold=990.0,
         leg_data_to_retrieve=(
-            'start of leg, date and time',
-            'end of leg, date and time',
-            'mode of transport',
-            'departure point of leg',
-            'arrival point of leg',
+            'start_date_time',
+            'end_date_time',
+            'mode_transport',
+            'departure_point',
+            'arrival_point',
+            'duration',
+            'instruction',
         ),
     ),
 )
 params = JourneyPlannerSearchParams(
     date='20241028',
-    time='0800',
+    time='1800',
     time_is='departing',
 )
 x = planner.make_plan(
