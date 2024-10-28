@@ -4,7 +4,7 @@
 from typing import Sequence, Optional, Dict, Union, Tuple, Any, Generator, List
 from enum import Enum
 from dataclasses import dataclass
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import datetime
 
 from tfl_api import TFLClient
@@ -76,8 +76,12 @@ class TimeIs(str, Enum):
     ARRIVING = "arriving"
 
 
+def to_camel(s):
+    return ''.join(word.capitalize() for word in s.split('_'))
+
+
 class JourneyPlannerSearchParams(BaseModel):
-    via: Optional[str] = None
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     national_search: Optional[bool] = None
     date: Optional[str] = None
     time: Optional[str] = None
@@ -87,7 +91,6 @@ class JourneyPlannerSearchParams(BaseModel):
     accessibility_preference: Optional[Sequence[AccessibilityPreference]] = None
     from_name: Optional[str] = None
     to_name: Optional[str] = None
-    via_name: Optional[str] = None
     max_transfer_minutes: Optional[int] = None
     max_walking_minutes: Optional[int] = None
     walking_speed: Optional[WalkingSpeed] = None
@@ -117,16 +120,9 @@ class JourneyPlannerSearchParams(BaseModel):
             raise ValueError('Time must be in format HHMM')
         return t
 
-    @field_validator('mode',
-                     'time_is',
-                     'journey_preference',
-                     'accessibility_preference',
-                     'walking_speed',
-                     'cycle_preference',
-                     'adjustment',
-                     'bike_proficiency')
+    @field_validator('mode','time_is', 'journey_preference', 'accessibility_preference', 'walking_speed', 'cycle_preference', 'adjustment', 'bike_proficiency')
     @classmethod
-    def validate_enum(cls, v):
+    def validate_enum_list(cls, v):
         if v is not None and type(v) is str:
             enum_type = cls.__model_fields__[v].type_
             if isinstance(v, str):
@@ -151,14 +147,18 @@ class JourneyPlannerSearch:
     def __call__(self,
                  from_loc: Union[str, Tuple[float, float]],
                  to_loc: Union[str, Tuple[float, float]],
-                 **params):
+                 params: JourneyPlannerSearchParams,
+                 ):
         """Plan a journey between two locations, given a set of preferences and times.
         
         """
         from_loc = self._normalize_loc(from_loc)
         to_loc = self._normalize_loc(to_loc)
         _url = f'{self._endpoint}/{from_loc}/to/{to_loc}'
-        self.status_code, payload = self.client.get(_url, params=params)
+        self.status_code, payload = self.client.get(
+            _url,
+            params=params.model_dump(by_alias=True)
+        )
         return payload
 
     @staticmethod
@@ -240,7 +240,6 @@ class JourneyPlannerSearchPayloadProcessor:
 
         self._loc_from = None
         self._loc_to = None
-        self._loc_via = None
         self._payload_description = {}
 
     def journeys(self,
@@ -311,7 +310,6 @@ class JourneyPlannerSearchPayloadProcessor:
         """
         self._loc_from = self._disambiguate_loc_type('from', payload)
         self._loc_to = self._disambiguate_loc_type('to', payload)
-        self._loc_via = self._disambiguate_loc_type('via', payload)
 
     def transform_loc(self, type_: str, loc):
         try:

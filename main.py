@@ -1,6 +1,9 @@
 """
 
 """
+import json
+from dataclasses import asdict
+
 from tfl_api import (
     TFLClient,
     JourneyPlannerSearchParams,
@@ -28,15 +31,15 @@ planner = Planner(
         ),
     ),
 )
-maker = JourneyMaker(planner=planner)
 params = JourneyPlannerSearchParams(
-    date='20241028',
-    time='1800',
-    time_is='departing',
+    walking_speed='fast',
+    time_is='arriving',
 )
+maker = JourneyMaker(planner=planner, default_params=params)
 x = maker.make_journey(
     starting_point='490000119F',
-    destination='London Bridge',
-    params=params,
+    destination='490000040A',
+    date='20241028',
+    time='1840',
 )
-print (x)
+print (json.dumps(asdict(x[0]), indent=4))

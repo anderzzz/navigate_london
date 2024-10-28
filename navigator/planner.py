@@ -79,12 +79,12 @@ class Planner:
     def make_plan(self,
                   from_loc: str,
                   to_loc: str,
-                  _recursive_depth: int = 0,
-                  **params) -> Union[Plan, List[Plan]]:
+                  params: JourneyPlannerSearchParams,
+                  _recursive_depth: int = 0) -> Union[Plan, List[Plan]]:
         """Plan a journey between two locations, given a set of preferences and times.
 
         """
-        payload = self.journey_planner(from_loc, to_loc, **params)
+        payload = self.journey_planner(from_loc, to_loc, params)
 
         if self.journey_planner.status_code == 200:
             return [Plan.create_from_payload(journey) for journey in self.payload_processor.journeys(payload=payload)]
@@ -97,16 +97,14 @@ class Planner:
             self.payload_processor.disambiguate(payload)
             _from_loc = self.payload_processor.transform_loc('from', from_loc)
             _to_loc = self.payload_processor.transform_loc('to', to_loc)
-            _via_loc = self.payload_processor.transform_loc('via', params['via'])
 
             return [
                 self.make_plan(
                     from_loc=locs[0],
                     to_loc=locs[1],
-                    via_loc=locs[2],
+                    params=params,
                     _recursive_depth=_recursive_depth,
-                    **params
-                ) for locs in itertools.product(_from_loc, _to_loc, _via_loc)
+                ) for locs in itertools.product(_from_loc, _to_loc)
             ]
         else:
             raise RuntimeError(f'Unexpected status code {self.journey_planner.status_code}')
@@ -141,19 +139,28 @@ class JourneyMaker:
     """
     def __init__(self,
                  planner: Planner,
+                 default_params: Optional[JourneyPlannerSearchParams] = None
                  ):
         self.planner = planner
+        if default_params is None:
+            default_params = JourneyPlannerSearchParams()
+        self.default_params = default_params
 
         self.is_multiple_journeys = False
 
     def make_journey(self,
                      starting_point: str,
                      destination: str,
-                     params: JourneyPlannerSearchParams) -> List[Journey]:
+                     **kwargs) -> List[Journey]:
+        """Make a journey between two locations
+
+        """
+        _params = self.default_params.model_copy(update=kwargs)
+
         plans = self.planner.make_plan(
             from_loc=starting_point,
             to_loc=destination,
-            **params.model_dump()
+            params=_params,
         )
         if isinstance(plans, list):
             if isinstance(plans[0], list):
