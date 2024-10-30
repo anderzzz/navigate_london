@@ -86,9 +86,11 @@ engine = Engine(
     message_params=anthropic_message_params,
     tools=tools
 )
+x = engine.process('I am an avid biker. I always want to bike when possible. So please consider all further requests with that in mind.')
+print (x)
 x = engine.process('I wish to travel from a stop in London with the code 490000119F to a stop with the code 490000040A on 11th November departing at six in the evening.')
 print (x)
-x = engine.process('Yes indeed. Show me the second option.')
-print (x)
+#x = engine.process('Yes indeed. Show me the second option.')
+#print (x)
 
 

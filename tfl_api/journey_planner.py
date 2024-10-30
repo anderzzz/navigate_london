@@ -14,15 +14,28 @@ from tfl_api import TFLClient
 #
 class Mode(str, Enum):
     """The modes of transportation."""
-    BUS = "public-bus"
+    BUS = "bus"
+    REPLACEMENT_BUS = "replacement-bus"
     TUBE = "tube"
-    TRAIN = "train"
+    ELIZABETH_LINE = "elizabeth-line"
+    NATIONAL_RAIL = "national-rail"
+    INTERNATIONAL_RAIL = "international-rail"
+    MOTORBIKE_SCOOTER = "motorbike-scooter"
     OVERGROUND = "overground"
-    RIVER = "river"
+    RIVER_TOUR = "river-tour"
+    RIVER_BUS = "river-bus"
     TRAM = "tram"
     WALKING = "walking"
     CYCLE = "cycle"
+    CYCLE_HIRE = "cycle-hire"
     COACH = "coach"
+    PRIVATE_COACH_AS_CUSTOMER = "private-coach-as-customer"
+    PRIVATE_COACH_AS_DRIVER = "private-coach-as-driver"
+    TAXI = "taxi"
+    PRIVATE_CAR = "private-car"
+    ELECTRIC_CAR = "electric-car"
+    PRIVATE_HIRE_AS_CUSTOMER = "private-hire-as-customer"
+    PRIVATE_HIRE_AS_DRIVER = "private-hire-as-driver"
 
 
 class AccessibilityPreference(str, Enum):
@@ -88,7 +101,7 @@ class JourneyPlannerSearchParams(BaseModel):
     time_is: Optional[TimeIs] = None
     journey_preference: Optional[JourneyPreference] = None
     mode: Optional[Sequence[Mode]] = None
-    accessibility_preference: Optional[Sequence[AccessibilityPreference]] = None
+    accessibility_preference: Optional[AccessibilityPreference] = None
     from_name: Optional[str] = None
     to_name: Optional[str] = None
     max_transfer_minutes: Optional[int] = None
@@ -96,7 +109,7 @@ class JourneyPlannerSearchParams(BaseModel):
     walking_speed: Optional[WalkingSpeed] = None
     cycle_preference: Optional[CyclePreference] = None
     adjustment: Optional[Adjustment] = None
-    bike_proficiency: Optional[Sequence[BikeProficiency]] = None
+    bike_proficiency: Optional[BikeProficiency] = None
     alternative_cycle: Optional[bool] = None
     alternative_walking: Optional[bool] = None
     walking_optimization: Optional[bool] = None

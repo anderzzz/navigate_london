@@ -31,16 +31,13 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["public-bus", "tube", "train", "overground", "river", "tram", "walking", "cycle", "coach"]
+            "enum": ["bus", "tube", "national-rail", "elizabeth-line","overground", "river-bus", "tram", "walking", "cycle", "cycle-hire", "coach", "taxi", "private-car", "electric-car"]
           },
           "description": "The modes of transportation to consider"
         },
         "accessibility_preference": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["noSolidStairs", "noEscalators", "noElevators", "stepFreeToVehicle", "stepFreeToPlatform"]
-          },
+          "type": "string",
+          "enum": ["noSolidStairs", "noEscalators", "noElevators", "stepFreeToVehicle", "stepFreeToPlatform"],
           "description": "Preferences for accessibility"
         },
         "max_transfer_minutes": {
@@ -67,11 +64,8 @@
           "description": "Adjustments to the journey"
         },
         "bike_proficiency": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["easy", "moderate", "fast"]
-          },
+          "type": "string",
+          "enum": ["easy", "moderate", "fast"],
           "description": "Proficiency in cycling"
         },
         "alternative_cycle": {
@@ -138,11 +132,8 @@
           "description": "The modes of transportation to consider"
         },
         "accessibility_preference": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["noSolidStairs", "noEscalators", "noElevators", "stepFreeToVehicle", "stepFreeToPlatform"]
-          },
+          "type": "string",
+          "enum": ["noSolidStairs", "noEscalators", "noElevators", "stepFreeToVehicle", "stepFreeToPlatform"],
           "description": "Preferences for accessibility"
         },
         "max_transfer_minutes": {
@@ -169,11 +160,8 @@
           "description": "Adjustments to the journey"
         },
         "bike_proficiency": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["easy", "moderate", "fast"]
-          },
+          "type": "string",
+          "enum": ["easy", "moderate", "fast"],
           "description": "Proficiency in cycling"
         },
         "alternative_cycle": {

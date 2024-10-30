@@ -24,7 +24,7 @@ class JourneyMakerToolSet(ToolSet):
         super().__init__(tool_spec_file, tools_to_include)
         self.maker = maker
 
-    def set_default_journey_params(self, **kwargs) -> str:
+    def set_default_journey_parameters(self, **kwargs) -> str:
         self.maker.default_params = JourneyPlannerSearchParams(**kwargs)
         return 'Successfully applied the following update to default journey parameters:\n' + json.dumps(
             kwargs,

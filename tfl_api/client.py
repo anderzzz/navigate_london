@@ -28,6 +28,10 @@ class TFLClient:
         else:
             params.update({'app_key': self.app_key})
 
+        for key, value in params.items():
+            if isinstance(value, list):
+                params[key] = ','.join(value)
+
         response = requests.get(f'{_BASE_URL_TFL}{endpoint}', params=params)
         response.raise_for_status()
 

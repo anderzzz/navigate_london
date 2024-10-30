@@ -26,6 +26,9 @@ class MessageStack:
     def content(self):
         return self.messages
 
+    def forget(self, n: int):
+        self.messages = self.messages[:-n]
+
     def append(self, entry):
         self.messages.append(entry)
 
