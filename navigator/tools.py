@@ -1,20 +1,27 @@
 """Functions that define tools interacting with the planner
 
 """
-from typing import Dict, Any
+import os
+from typing import Dict, Any, Sequence, Optional, List
 import json
 
+from base import ToolSet
 from tfl_api import JourneyPlannerSearchParams
 from .planner import JourneyMaker
 
+TOOL_SPEC_FILE = os.path.join(os.path.dirname(__file__), 'tools.json')
 
-class JourneyMakerTools:
+
+class JourneyMakerToolSet(ToolSet):
     """Bla bla
 
     """
     def __init__(self,
                  maker: JourneyMaker,
-                 ):
+                 tools_to_include: Optional[Sequence[str]] = None,
+                 tool_spec_file: str = TOOL_SPEC_FILE,
+             ):
+        super().__init__(tool_spec_file, tools_to_include)
         self.maker = maker
 
     def set_default_journey_params(self, **kwargs) -> str:

@@ -5,5 +5,5 @@ from .planner import (
     JourneyMaker,
 )
 from .tools import (
-    JourneyMakerTools,
+    JourneyMakerToolSet,
 )

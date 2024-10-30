@@ -3,7 +3,7 @@
     "name": "set_default_journey_parameters",
     "description": "Set the default journey parameters, which are used in all subsequent journey planning and computation.",
     "input_schema": {
-      "type": "objects",
+      "type": "object",
       "properties": {
         "national_search": {
           "type": "boolean",
