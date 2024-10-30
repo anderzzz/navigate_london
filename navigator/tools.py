@@ -17,9 +17,12 @@ class JourneyMakerTools:
                  ):
         self.maker = maker
 
-    def set_default_journey_params(self, **kwargs) -> bool:
+    def set_default_journey_params(self, **kwargs) -> str:
         self.maker.default_params = JourneyPlannerSearchParams(**kwargs)
-        return True
+        return 'Successfully applied the following update to default journey parameters:\n' + json.dumps(
+            kwargs,
+            indent=4,
+        )
 
     def compute_journey_plans(self,
                               starting_point: str,
@@ -49,3 +52,6 @@ class JourneyMakerTools:
 
     def get_computed_journey_plan(self, journey_index: int, plan_index: int) -> str:
         return self.maker[journey_index][plan_index].to_json(indent=4)
+
+    def get_plan_field_description(self):
+        return self.maker[0][0].field_description
