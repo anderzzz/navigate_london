@@ -127,7 +127,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["public-bus", "tube", "train", "overground", "river", "tram", "walking", "cycle", "coach"]
+            "enum": ["bus", "tube", "national-rail", "elizabeth-line","overground", "river-bus", "tram", "walking", "cycle", "cycle-hire", "coach", "taxi", "private-car", "electric-car"]
           },
           "description": "The modes of transportation to consider"
         },

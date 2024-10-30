@@ -48,6 +48,13 @@ class JourneyMakerToolSet(ToolSet):
                     'starting point': journey.starting_point_name,
                     'destination': journey.destination_name,
                     'number of plans': journey.n_plans,
+                    'plan meta data': [
+                        {
+                            'plan index': l,
+                            'number of legs in plan': plan.n_legs,
+                            'modes of transport in plan': plan.modes_of_transport,
+                         } for l, plan in enumerate(journey)
+                    ]
                 } for k, journey in enumerate(self.maker)
             ]
         },

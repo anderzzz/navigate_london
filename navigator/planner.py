@@ -58,8 +58,13 @@ class Plan:
     legs: Sequence[JourneyLeg]
     duration: Optional[int] = None
 
-    def from_where_to_where(self) -> (str, str):
-        return self.legs[0].departure_point, self.legs[-1].arrival_point
+    @property
+    def n_legs(self):
+        return len(self.legs)
+
+    @property
+    def modes_of_transport(self):
+        return list(set([leg.mode_transport for leg in self.legs]))
 
     def to_dict(self):
         return _filter_none(asdict(self))
