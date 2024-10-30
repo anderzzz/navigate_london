@@ -57,7 +57,6 @@ class Engine:
     def process(self,
                 input_prompt: str,
                 tool_choice: str = 'auto',
-                respond_to_tool: Optional[bool] = False,
                 ):
         """Bla bla
 
@@ -72,4 +71,10 @@ class Engine:
             max_tokens=self.message_params.max_tokens,
             temperature=self.message_params.temperature,
             tool_choice=tool_choice,
+        )
+
+        self._message_stack.add_message(
+            role='assistant',
+            content=response['message'],
+            tool=response['tool'],
         )

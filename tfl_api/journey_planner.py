@@ -81,6 +81,7 @@ def to_camel(s):
 
 class JourneyPlannerSearchParams(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
     national_search: Optional[bool] = None
     date: Optional[str] = None
     time: Optional[str] = None

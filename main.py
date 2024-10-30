@@ -10,6 +10,7 @@ from tfl_api import (
 from navigator import (
     Planner,
     JourneyMaker,
+    JourneyMakerTools,
 )
 
 client = TFLClient(env_var_app_key='TFL_API_KEY')
@@ -39,12 +40,23 @@ params = JourneyPlannerSearchParams(
 #    cycle_preference='allTheWay',
 )
 maker = JourneyMaker(planner=planner, default_params=params)
-maker.make_journey(
+#maker.make_journey(
+#    starting_point='490000119F',
+#    destination='490000040A',
+#    date='20241028',
+#    time='1840',
+#)
+#print (maker[0][0].to_json(indent=4))
+#print (maker[0][0].field_description)
+tools = JourneyMakerTools(maker=maker)
+p = tools.compute_journey_plans(
     starting_point='490000119F',
     destination='490000040A',
-    date='20241028',
+    date='20241108',
     time='1840',
 )
-print (maker[0][0].to_json(indent=4))
-print (maker[0][0].field_description)
+print (p)
+p = tools.get_computed_journey(0)
+print (p)
+
 

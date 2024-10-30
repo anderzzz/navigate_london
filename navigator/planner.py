@@ -207,6 +207,16 @@ class JourneyMaker:
         self.is_multiple_journeys = False
         self._journey = None
 
+    @property
+    def default_params(self):
+        return self._default_params
+
+    @default_params.setter
+    def default_params(self, value):
+        if not isinstance(value, JourneyPlannerSearchParams):
+            raise ValueError('default_params must be an instance of JourneyPlannerSearchParams')
+        self._default_params = value
+
     def __getitem__(self, item):
         return self._journey[item]
 
