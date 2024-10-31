@@ -29,7 +29,6 @@ planner = Planner(
             'mode_transport',
             'departure_point',
             'arrival_point',
-#            'duration',
             'instruction',
             'instruction_steps',
         ),
@@ -42,27 +41,9 @@ planner = Planner(
 params = JourneyPlannerSearchParams(
     walking_speed='fast',
     time_is='arriving',
-#    cycle_preference='allTheWay',
 )
 maker = JourneyMaker(planner=planner, default_params=params)
-#maker.make_journey(
-#    starting_point='490000119F',
-#    destination='490000040A',
-#    date='20241028',
-#    time='1840',
-#)
-#print (maker[0][0].to_json(indent=4))
-#print (maker[0][0].field_description)
 tools = JourneyMakerToolSet(maker=maker)
-#p = tools.compute_journey_plans(
-#    starting_point='490000119F',
-#    destination='490000040A',
-#    date='20241108',
-#    time='1840',
-#)
-#print (p)
-#p = tools.get_computed_journey(0)
-#print (p)
 anthropic_message_params = AnthropicMessageParams(
     model='claude-3-5-sonnet-20241022',
     max_tokens=1000,
@@ -90,7 +71,5 @@ x = engine.process('I am an avid biker. I always want to bike when possible. So 
 print (x)
 x = engine.process('I wish to travel from a stop in London with the code 490000119F to a stop with the code 490000040A on 11th November departing at six in the evening.')
 print (x)
-#x = engine.process('Yes indeed. Show me the second option.')
-#print (x)
 
 
