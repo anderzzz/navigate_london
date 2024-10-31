@@ -1,8 +1,11 @@
 """Agents that define an engine with system prompt and optional tools
 
 """
+import os
 from typing import Optional, Dict
 from jinja2 import Environment, FileSystemLoader
+from datetime import datetime
+import pytz
 
 from agent.tools import SubTaskAgentToolSet
 from base import ToolSet
@@ -15,6 +18,7 @@ from tfl_api import (
     JourneyPlannerSearchPayloadProcessor,
 )
 
+PROMPT_FOLDER = os.path.join(os.path.dirname(__file__), 'prompt_templates')
 
 
 def build_agent(
@@ -27,8 +31,10 @@ def build_agent(
         system_prompt_kwargs: Optional[Dict] = None,
 ):
     system_prompt_template = Environment(
-        loader=FileSystemLoader('./prompt_templates'),
+        loader=FileSystemLoader(PROMPT_FOLDER),
     ).get_template(system_prompt_template)
+    if system_prompt_kwargs is None:
+        system_prompt_kwargs = {}
     return Engine(
         api_key_env_var=api_key_env_var,
         system_prompt=system_prompt_template.render(**system_prompt_kwargs),
@@ -73,7 +79,7 @@ maker = JourneyMaker(
 agent_handle_preferences_and_settings = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='preferences_and_settings.j2',
-    model_name='claude-3-5-sonnet-20241022',
+    model_name='claude-3-haiku-20240307',
     max_tokens=1000,
     temperature=0.7,
     tools=JourneyMakerToolSet(
@@ -84,7 +90,7 @@ agent_handle_preferences_and_settings = build_agent(
 agent_handle_journey_plans = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='journey_plans.j2',
-    model_name='claude-3-5-sonnet-20241022',
+    model_name='claude-3-haiku-20240307',
     max_tokens=1000,
     temperature=0.7,
     tools=JourneyMakerToolSet(
@@ -94,17 +100,20 @@ agent_handle_journey_plans = build_agent(
                           'get_computed_journey_plan'),
     )
 )
+date_now_in_london = datetime.now(pytz.timezone('Europe/London'))
+date_str = date_now_in_london.strftime('%Y-%m-%d')
 agent_router = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='router.j2',
+    system_prompt_kwargs={'year_today': '2024', 'date_today': date_str},
     model_name='claude-3-5-sonnet-20241022',
     max_tokens=1000,
     temperature=0.7,
     tools=SubTaskAgentToolSet(
         subtask_agents={
             'preferences_and_settings': agent_handle_preferences_and_settings,
-            'journey_plans': agent_handle_journey_plans,
+            'journey_planner': agent_handle_journey_plans,
         },
-        tools_to_include=('preferences_and_settings', 'journey_plans'),
+        tools_to_include=('preferences_and_settings', 'journey_planner'),
     ),
 )

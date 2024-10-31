@@ -1,6 +1,28 @@
 [
   {
-    "name": "process_text",
-    "description":
+    "name": "preferences_and_settings",
+    "description": "Specific preferences or conditions of the journey by the user are handled and set by this tool. That includes such things as whether to prefer journeys with few interchanges, or fast journeys or what amount of walking or biking the user prefers.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "input_prompt": {
+          "type": "string",
+          "description": "Free text prompt that contains the text relevant to the user's preferences and settings."
+        }
+      }
+    }
+  },
+  {
+    "name": "journey_planner",
+    "description": "Compute and get the journey plans based on specific starting and destination points as well as the time of day and date.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "input_prompt": {
+          "type": "string",
+          "description": "Free text prompt that contains the text relevant to the journey the user needs to be planned."
+        }
+      }
+    }
   }
 ]

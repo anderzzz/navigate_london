@@ -25,9 +25,19 @@ class SubTaskAgentToolSet(ToolSet):
     def _invoke_engine(self, agent_key: str, **kwargs) -> str:
         return self.subtask_agents[agent_key].process(**kwargs)
 
-    def preferences_and_settings(self, **kwargs) -> str:
-        return self._invoke_engine('preferences_and_settings', **kwargs)
+    def preferences_and_settings(self,
+                                 input_prompt: str,
+                                 ) -> str:
+        return self._invoke_engine('preferences_and_settings',
+                                   input_prompt=input_prompt,
+                                   tool_choice_type='any',
+                                   interpret_tool_use_output=False,
+                                   )
 
-    def journey_planner(self, **kwargs) -> str:
-        return self._invoke_engine('journey_planner', **kwargs)
+    def journey_planner(self, input_prompt: str) -> str:
+        return self._invoke_engine('journey_planner',
+                                   input_prompt=input_prompt,
+                                   tool_choice_type='any',
+                                   interpret_tool_use_output=False,
+                                   )
 

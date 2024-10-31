@@ -42,6 +42,12 @@ class MessageStack:
                     if isinstance(content, TextBlock):
                         yield content.text
 
+    def pull_tool_result(self):
+        for message in self.messages:
+            if message['role'] == 'user':
+                for content in message['content']:
+                    yield content.get('content', 'No tool result found')
+
     def __len__(self):
         return len(self.messages)
 
@@ -77,6 +83,7 @@ class Engine:
                 input_prompt: str,
                 tool_choice_type: str = 'auto',
                 tools_choice_name: Optional[str] = None,
+                interpret_tool_use_output: bool = True,
                 ):
         """Bla bla
 
@@ -84,6 +91,7 @@ class Engine:
         self.tool_choice = {'type': tool_choice_type}
         if tools_choice_name:
             self.tool_choice['name'] = tools_choice_name
+        self.interpret_tool_use_output = interpret_tool_use_output
 
         self._message_stack.append(MessageParam(
             role='user',
@@ -96,7 +104,11 @@ class Engine:
 
         if self.what_does_ai_say():
             added_messages = self._message_stack[length_message_stack:]
-            return '\n\n'.join([text for text in added_messages.pull_text_by_role('assistant')])
+            if self.interpret_tool_use_output:
+                text_out = added_messages.pull_text_by_role('assistant')
+            else:
+                text_out = added_messages.pull_tool_result()
+            return '\n\n'.join([text for text in text_out])
 
 
     def what_does_ai_say(self):
@@ -134,6 +146,9 @@ class Engine:
             ))
 
         if response.stop_reason == 'tool_use':
-            return self.what_does_ai_say()
+            if self.interpret_tool_use_output:
+                return self.what_does_ai_say()
+            else:
+                return True
         elif response.stop_reason == 'end_turn':
             return True
