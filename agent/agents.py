@@ -4,6 +4,7 @@
 from typing import Optional, Dict
 from jinja2 import Environment, FileSystemLoader
 
+from agent.tools import SubTaskAgentToolSet
 from base import ToolSet
 from semantics import Engine, AnthropicMessageParams
 from navigator import Planner, JourneyMaker, JourneyMakerToolSet
@@ -13,6 +14,32 @@ from tfl_api import (
     JourneyPlannerSearch,
     JourneyPlannerSearchPayloadProcessor,
 )
+
+
+
+def build_agent(
+        api_key_env_var: str,
+        system_prompt_template: str,
+        model_name: str,
+        max_tokens: int,
+        temperature: float,
+        tools: Optional[ToolSet] = None,
+        system_prompt_kwargs: Optional[Dict] = None,
+):
+    system_prompt_template = Environment(
+        loader=FileSystemLoader('./prompt_templates'),
+    ).get_template(system_prompt_template)
+    return Engine(
+        api_key_env_var=api_key_env_var,
+        system_prompt=system_prompt_template.render(**system_prompt_kwargs),
+        message_params=AnthropicMessageParams(
+            model=model_name,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        ),
+        tools=tools,
+    )
+
 
 tfl_client = TFLClient(env_var_app_key='TFL_API_KEY')
 planner = Planner(
@@ -41,31 +68,6 @@ maker = JourneyMaker(
         time_is='arriving',
     )
 )
-tools_journey_maker = JourneyMakerToolSet(maker=maker)
-
-
-def build_agent(
-        api_key_env_var: str,
-        system_prompt_template: str,
-        model_name: str,
-        max_tokens: int,
-        temperature: float,
-        tools: Optional[ToolSet] = None,
-        system_prompt_kwargs: Optional[Dict] = None,
-):
-    system_prompt_template = Environment(
-        loader=FileSystemLoader('./prompt_templates'),
-    ).get_template(system_prompt_template)
-    return Engine(
-        api_key_env_var=api_key_env_var,
-        system_prompt=system_prompt_template.render(**system_prompt_kwargs),
-        message_params=AnthropicMessageParams(
-            model=model_name,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        ),
-        tools=tools,
-    )
 
 
 agent_handle_preferences_and_settings = build_agent(
@@ -74,5 +76,35 @@ agent_handle_preferences_and_settings = build_agent(
     model_name='claude-3-5-sonnet-20241022',
     max_tokens=1000,
     temperature=0.7,
-    tools=tools_journey_maker,
+    tools=JourneyMakerToolSet(
+        maker=maker,
+        tools_to_include=('set_default_journey_parameters',),
+    )
+)
+agent_handle_journey_plans = build_agent(
+    api_key_env_var='ANTHROPIC_API_KEY',
+    system_prompt_template='journey_plans.j2',
+    model_name='claude-3-5-sonnet-20241022',
+    max_tokens=1000,
+    temperature=0.7,
+    tools=JourneyMakerToolSet(
+        maker=maker,
+        tools_to_include=('compute_journey_plans',
+                          'get_computed_journey',
+                          'get_computed_journey_plan'),
+    )
+)
+agent_router = build_agent(
+    api_key_env_var='ANTHROPIC_API_KEY',
+    system_prompt_template='router.j2',
+    model_name='claude-3-5-sonnet-20241022',
+    max_tokens=1000,
+    temperature=0.7,
+    tools=SubTaskAgentToolSet(
+        subtask_agents={
+            'preferences_and_settings': agent_handle_preferences_and_settings,
+            'journey_plans': agent_handle_journey_plans,
+        },
+        tools_to_include=('preferences_and_settings', 'journey_plans'),
+    ),
 )
