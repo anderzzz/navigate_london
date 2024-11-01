@@ -43,6 +43,7 @@ class JourneyLeg:
     departure_point: str
     arrival_point: str
     mode_transport: str
+    path: Optional[List[List[float]]] = None
     duration: Optional[int] = None
     instruction: Optional[str] = None
     instruction_steps: Sequence[JourneyLegStep] = None
@@ -106,6 +107,7 @@ class Plan:
                     departure_point=leg.get('departure_point'),
                     arrival_point=leg.get('arrival_point'),
                     mode_transport=leg.get('mode_transport'),
+                    path=leg.get('path'),
                     instruction_steps=[
                         JourneyLegStep(
                             description_heading=step.get('description_heading'),
@@ -254,5 +256,3 @@ class JourneyMaker:
                 plans = [plans]
 
         self._journey = [Journey(plans=_plans) for _plans in plans]
-
-

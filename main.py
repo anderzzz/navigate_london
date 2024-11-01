@@ -31,6 +31,7 @@ planner = Planner(
             'arrival_point',
             'instruction',
             'instruction_steps',
+            'path',
         ),
         step_data_to_retrieve=(
             'description',

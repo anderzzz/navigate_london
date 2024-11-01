@@ -207,6 +207,7 @@ JOURNEY_LEG_DATA = [
     FieldMapping('departure_point', 'departurePoint.commonName', 'The departure point of the leg'),
     FieldMapping('arrival_point', 'arrivalPoint.commonName', 'The arrival point of the leg'),
     FieldMapping('mode_transport', 'mode.name', 'The mode of transport for the leg'),
+    FieldMapping('path', 'path.lineString', 'The longitude and latitude of the path of the leg'),
 ]
 JOURNEY_STEP_DATA = [
     FieldMapping('description_heading', 'descriptionHeading', 'The heading of the step to take'),
