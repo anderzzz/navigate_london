@@ -2,7 +2,7 @@
 
 """
 import os
-from typing import List
+from typing import Sequence
 import itertools
 import folium
 import seaborn as sns
@@ -59,7 +59,7 @@ class MapDrawerToolSet(ToolSet):
     def __init__(self,
                  drawer: MapDrawer,
                  maker: JourneyMaker,
-                 tools_to_include: List[str] = None,
+                 tools_to_include: Sequence[str] = None,
                  tool_spec_file: str = TOOL_SPEC_FILE,
                  ):
         super().__init__(tools_to_include=tools_to_include, tool_spec_file=tool_spec_file)

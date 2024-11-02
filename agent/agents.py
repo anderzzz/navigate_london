@@ -17,7 +17,10 @@ from tfl_api import (
     JourneyPlannerSearch,
     JourneyPlannerSearchPayloadProcessor,
 )
-from artefacts import MapDrawer
+from artefacts import (
+    MapDrawer,
+    MapDrawerToolSet,
+)
 
 
 PROMPT_FOLDER = os.path.join(os.path.dirname(__file__), 'prompt_templates')
@@ -32,7 +35,7 @@ def build_agent(
         tools: Optional[ToolSet] = None,
         system_prompt_kwargs: Optional[Dict] = None,
 ):
-    """Build an agent with a system prompt retrieved from template and optional tools"""
+    """Build an agent with a system prompt and optional tools"""
     system_prompt_template = Environment(
         loader=FileSystemLoader(PROMPT_FOLDER),
     ).get_template(system_prompt_template)
@@ -50,7 +53,6 @@ def build_agent(
     )
 
 
-# Instantiate objects that will be used as tools by agents
 tfl_client = TFLClient(env_var_app_key='TFL_API_KEY')
 planner = Planner(
     planner=JourneyPlannerSearch(tfl_client),
@@ -81,7 +83,6 @@ maker = JourneyMaker(
 map_drawer = MapDrawer()
 
 
-# Create the specialized agents
 agent_handle_preferences_and_settings = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='preferences_and_settings.j2',
@@ -106,15 +107,20 @@ agent_handle_journey_plans = build_agent(
                           'get_computed_journey_plan'),
     )
 )
-agent_handle_map_drawing = build_agent(
+agent_handle_map_drawer = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
-    system_prompt_template='map_drawing.j2',
+    system_prompt_template='map_drawer.j2',
     model_name='claude-3-haiku-20240307',
     max_tokens=1000,
     temperature=0.7,
-    tools=
+    tools=MapDrawerToolSet(
+        drawer=map_drawer,
+        maker=maker,
+        tools_to_include=('draw_map_for_plan',),
+    )
+)
 
-# Create the main router agent which interacts with principal and the other agents
+
 date_now_in_london = datetime.now(pytz.timezone('Europe/London'))
 date_str = date_now_in_london.strftime('%Y-%m-%d')
 agent_router = build_agent(
@@ -128,7 +134,8 @@ agent_router = build_agent(
         subtask_agents={
             'preferences_and_settings': agent_handle_preferences_and_settings,
             'journey_planner': agent_handle_journey_plans,
+            'output_artefacts': agent_handle_map_drawer,
         },
-        tools_to_include=('preferences_and_settings', 'journey_planner'),
+        tools_to_include=('preferences_and_settings', 'journey_planner', 'output_artefacts'),
     ),
 )
