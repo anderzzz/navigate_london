@@ -1,0 +1,24 @@
+[
+  {
+    "name": "draw_map_for_plan",
+    "description": "Draw the map of London for one (and only one) specific journey plan, wherein the trajectory of longitude and latitude line segments are drawn, each leg of a plan with different colour. By default the tool opens the webbrowser to display the map.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "journey_index": {
+          "type": "integer",
+          "description": "The index of the journey which plans to retrieve"
+        },
+        "plan_index": {
+          "type": "integer",
+          "description": "The index of the plan to retrieve and display on the map"
+        },
+        "browser_display": {
+          "type": "boolean",
+          "description": "Whether to display the map in the web browser or only to save it as a file; by default it is true"
+        }
+      },
+      "required": ["journey_index", "plan_index"]
+    }
+  }
+]
