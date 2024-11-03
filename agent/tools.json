@@ -9,7 +9,8 @@
           "type": "string",
           "description": "Free text prompt that contains the text relevant to the user's preferences and settings."
         }
-      }
+      },
+      "required": ["input_prompt"]
     }
   },
   {
@@ -22,7 +23,8 @@
           "type": "string",
           "description": "Free text prompt that contains the text relevant to the journey the user needs to be planned."
         }
-      }
+      },
+      "required": ["input_prompt"]
     }
   },
   {
@@ -34,8 +36,17 @@
         "input_prompt": {
         "type": "string",
         "description": "Free text prompt that contains the text relevant to the output artefacts."
+        },
+        "journey_index": {
+          "type": "integer",
+          "description": "The index of the journey which plans to turn into one more more output artefacts"
+        },
+        "plan_index": {
+          "type": "integer",
+          "description": "The index of the plan to turn into one more more output artefacts"
         }
-      }
+      },
+      "required": ["input_prompt","journey_index", "plan_index"]
     }
   }
 ]

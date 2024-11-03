@@ -4,6 +4,7 @@
 import os
 from typing import Optional, Dict, Any, List, Literal
 from dataclasses import dataclass, field
+import json
 
 from anthropic import Anthropic
 from anthropic.types import TextBlock, ToolUseBlock, MessageParam, ToolResultBlockParam
@@ -76,11 +77,13 @@ class Engine:
         self.tool_set = tools
         self.tool_spec = self.tool_set.tools_spec
         self.tool_choice = None
+        self.interpret_tool_use_output = True
 
         self._message_stack = MessageStack()
 
     def process(self,
                 input_prompt: str,
+                input_structured: Optional[Dict[str, Any]] = None,
                 tool_choice_type: str = 'auto',
                 tools_choice_name: Optional[str] = None,
                 interpret_tool_use_output: bool = True,
@@ -92,6 +95,10 @@ class Engine:
         if tools_choice_name:
             self.tool_choice['name'] = tools_choice_name
         self.interpret_tool_use_output = interpret_tool_use_output
+
+        if input_structured:
+            structured_content_str = json.dumps(input_structured)
+            input_prompt += f'\n\n=== Structured input data ===\n{structured_content_str}\n=== End of structured input data ==='
 
         self._message_stack.append(MessageParam(
             role='user',

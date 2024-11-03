@@ -98,7 +98,7 @@ agent_handle_preferences_and_settings = build_agent(
 agent_handle_journey_plans = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='journey_plans.j2',
-    system_prompt_kwargs=user_0['user location short-hands'],
+    system_prompt_kwargs=user_0.get('user location short-hands', None),
     model_name='claude-3-haiku-20240307',
     max_tokens=1000,
     temperature=0.7,
@@ -109,13 +109,13 @@ agent_handle_journey_plans = build_agent(
                           'get_computed_journey_plan'),
     )
 )
-agent_handle_map_drawer = build_agent(
+agent_handle_output_artefacts = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
-    system_prompt_template='map_drawer.j2',
+    system_prompt_template='output_artefacts.j2',
     model_name='claude-3-haiku-20240307',
     max_tokens=1000,
     temperature=0.7,
-    tools=MapDrawerToolSet(
+    tools=OutputArtefactsToolSet(
         drawer=map_drawer,
         maker=maker,
         tools_to_include=('draw_map_for_plan',),

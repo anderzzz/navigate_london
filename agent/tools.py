@@ -37,7 +37,15 @@ class SubTaskAgentToolSet(ToolSet):
     def journey_planner(self, input_prompt: str) -> str:
         return self._invoke_engine('journey_planner',
                                    input_prompt=input_prompt,
+                                   tool_choice_type='auto',
+                                   interpret_tool_use_output=True,
+                                   )
+
+    def output_artefacts(self, input_prompt: str, journey_index: int, plan_index: int) -> str:
+        return self._invoke_engine('output_artefacts',
+                                   input_prompt=input_prompt,
+                                   journey_index=journey_index,
+                                   plan_index=plan_index,
                                    tool_choice_type='any',
                                    interpret_tool_use_output=False,
                                    )
-
