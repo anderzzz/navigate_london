@@ -9,3 +9,10 @@ Terminology to consider:
 - Plan: A plan is a particular combination of modes of transportation at particular times that accomplishes the journey. The journey planner typically returns multiple plans for a journey, typically different with respect to exact time of departure, modes of travel, number of transfers and so on.
 - Leg: A leg is one part of a plan, such as a bus ride, a walk or a tube ride. For example, if a plan includes two bus rides, the plan has two legs ordered by the sequence they are taken.
 - Step: A step is an optional part of a leg, which provides additional information of the sequence of actions to take. For example, the navigation of streets and direction in a bike route are provided as steps of a leg.
+
+{% if user_shorthands %}
+The user may use shorthand for locations, such as:
+{%  for shorthand, detail in user_shorthands.items() %}
+- {{ shorthand }} for {{ detail }}
+{% endfor %}
+{% endif %}

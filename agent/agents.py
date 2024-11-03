@@ -9,6 +9,7 @@ import pytz
 
 from agent.tools import SubTaskAgentToolSet
 from base import ToolSet
+from user import user_0
 from semantics import Engine, AnthropicMessageParams
 from navigator import Planner, JourneyMaker, JourneyMakerToolSet
 from tfl_api import (
@@ -97,6 +98,7 @@ agent_handle_preferences_and_settings = build_agent(
 agent_handle_journey_plans = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='journey_plans.j2',
+    system_prompt_kwargs=user_0['user location short-hands'],
     model_name='claude-3-haiku-20240307',
     max_tokens=1000,
     temperature=0.7,
@@ -126,7 +128,11 @@ date_str = date_now_in_london.strftime('%Y-%m-%d')
 agent_router = build_agent(
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='router.j2',
-    system_prompt_kwargs={'year_today': '2024', 'date_today': date_str},
+    system_prompt_kwargs={
+        'year_today': '2024',
+        'date_today': date_str,
+        'user_name': user_0.get('name', None),
+    },
     model_name='claude-3-5-sonnet-20241022',
     max_tokens=1000,
     temperature=0.7,
