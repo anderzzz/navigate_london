@@ -2,7 +2,7 @@
 
 """
 import os
-from typing import Optional, Sequence, Dict
+from typing import Optional, Sequence, Dict, Any
 
 from base import ToolSet
 from semantics import Engine
@@ -37,15 +37,14 @@ class SubTaskAgentToolSet(ToolSet):
     def journey_planner(self, input_prompt: str) -> str:
         return self._invoke_engine('journey_planner',
                                    input_prompt=input_prompt,
-                                   tool_choice_type='auto',
-                                   interpret_tool_use_output=True,
+                                   tool_choice_type='any',
+                                   interpret_tool_use_output=False,
                                    )
 
-    def output_artefacts(self, input_prompt: str, journey_index: int, plan_index: int) -> str:
+    def output_artefacts(self, input_prompt: str, input_structured: Dict[str, Any]) -> str:
         return self._invoke_engine('output_artefacts',
                                    input_prompt=input_prompt,
-                                   journey_index=journey_index,
-                                   plan_index=plan_index,
+                                   input_structured=input_structured,
                                    tool_choice_type='any',
                                    interpret_tool_use_output=False,
                                    )

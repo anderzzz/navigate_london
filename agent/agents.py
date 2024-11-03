@@ -20,7 +20,7 @@ from tfl_api import (
 )
 from artefacts import (
     MapDrawer,
-    MapDrawerToolSet,
+    OutputArtefactsToolSet,
 )
 
 
@@ -67,6 +67,7 @@ planner = Planner(
             'arrival_point',
             'instruction',
             'instruction_steps',
+            'path',
         ),
         step_data_to_retrieve=(
             'description',
@@ -140,7 +141,7 @@ agent_router = build_agent(
         subtask_agents={
             'preferences_and_settings': agent_handle_preferences_and_settings,
             'journey_planner': agent_handle_journey_plans,
-            'output_artefacts': agent_handle_map_drawer,
+            'output_artefacts': agent_handle_output_artefacts,
         },
         tools_to_include=('preferences_and_settings', 'journey_planner', 'output_artefacts'),
     ),

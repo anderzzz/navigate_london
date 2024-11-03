@@ -27,7 +27,9 @@ class MapDrawer:
 
     def make_map_for_plan(self, plan: Plan):
         for leg in plan.legs:
-            print (leg.path)
+            if not leg.path:
+                raise ValueError('No path data available for leg')
+
             try:
                 path = ast.literal_eval(leg.path)
             except ValueError:

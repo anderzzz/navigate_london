@@ -1,4 +1,6 @@
 from .maps import (
     MapDrawer,
-    MapDrawerToolSet,
+)
+from .tools import (
+    OutputArtefactsToolSet,
 )
