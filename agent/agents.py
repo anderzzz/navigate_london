@@ -33,6 +33,7 @@ def build_agent(
         model_name: str,
         max_tokens: int,
         temperature: float,
+        name: str,
         tools: Optional[ToolSet] = None,
         system_prompt_kwargs: Optional[Dict] = None,
 ):
@@ -43,6 +44,7 @@ def build_agent(
     if system_prompt_kwargs is None:
         system_prompt_kwargs = {}
     return Engine(
+        name=name,
         api_key_env_var=api_key_env_var,
         system_prompt=system_prompt_template.render(**system_prompt_kwargs),
         message_params=AnthropicMessageParams(
@@ -86,6 +88,7 @@ map_drawer = MapDrawer()
 
 
 agent_handle_preferences_and_settings = build_agent(
+    name='agent to handle preference settings',
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='preferences_and_settings.j2',
     model_name='claude-3-haiku-20240307',
@@ -97,6 +100,7 @@ agent_handle_preferences_and_settings = build_agent(
     )
 )
 agent_handle_journey_plans = build_agent(
+    name='agent to compute journey plans',
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='journey_plans.j2',
     system_prompt_kwargs=user_0.get('user location short-hands', None),
@@ -111,6 +115,7 @@ agent_handle_journey_plans = build_agent(
     )
 )
 agent_handle_output_artefacts = build_agent(
+    name='agent to generate output artifacts',
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='output_artefacts.j2',
     model_name='claude-3-haiku-20240307',
@@ -119,7 +124,9 @@ agent_handle_output_artefacts = build_agent(
     tools=OutputArtefactsToolSet(
         drawer=map_drawer,
         maker=maker,
-        tools_to_include=('draw_map_for_plan',),
+        tools_to_include=('draw_map_for_plan',
+                          'get_computed_journey',
+                          'get_computed_journey_plan'),
     )
 )
 
@@ -127,6 +134,7 @@ agent_handle_output_artefacts = build_agent(
 date_now_in_london = datetime.now(pytz.timezone('Europe/London'))
 date_str = date_now_in_london.strftime('%Y-%m-%d')
 agent_router = build_agent(
+    name='agent to route requests and speak with the principal',
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='router.j2',
     system_prompt_kwargs={

@@ -36,8 +36,8 @@ class OutputArtefactsToolSet(ToolSet):
 
         return ret_message
 
-    def get_journey(self, journey_index: int) -> str:
+    def get_computed_journey(self, journey_index: int) -> str:
         return self.journey_maker[journey_index].to_json(indent=4)
 
-    def get_plan(self, journey_index: int, plan_index: int) -> str:
+    def get_computed_journey_plan(self, journey_index: int, plan_index: int) -> str:
         return self.journey_maker[journey_index][plan_index].to_json(indent=4)

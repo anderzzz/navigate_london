@@ -32,6 +32,7 @@ class SubTaskAgentToolSet(ToolSet):
                                    input_prompt=input_prompt,
                                    tool_choice_type='any',
                                    interpret_tool_use_output=False,
+                                   with_memory=False,
                                    )
 
     def journey_planner(self, input_prompt: str) -> str:
@@ -39,6 +40,7 @@ class SubTaskAgentToolSet(ToolSet):
                                    input_prompt=input_prompt,
                                    tool_choice_type='any',
                                    interpret_tool_use_output=False,
+                                   with_memory=False,
                                    )
 
     def output_artefacts(self, input_prompt: str, input_structured: Dict[str, Any]) -> str:
@@ -47,4 +49,5 @@ class SubTaskAgentToolSet(ToolSet):
                                    input_structured=input_structured,
                                    tool_choice_type='any',
                                    interpret_tool_use_output=False,
+                                   with_memory=False,
                                    )

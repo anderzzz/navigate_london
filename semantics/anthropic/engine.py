@@ -64,6 +64,7 @@ class Engine:
                  api_key_env_var: str,
                  system_prompt: str,
                  message_params: AnthropicMessageParams,
+                 name: Optional[str] = None,
                  tools: Optional[ToolSet] = None,
                  ):
         api_key = os.getenv(api_key_env_var)
@@ -71,6 +72,7 @@ class Engine:
             raise ValueError(f'Did not find an API key in environment variable {api_key_env_var}')
         self.client = Anthropic(api_key=os.getenv(api_key_env_var))
         self.system_prompt = system_prompt
+        self.name = name
         self.message_params = message_params
         if tools is None:
             self.tool_set = ToolSet()
@@ -87,10 +89,14 @@ class Engine:
                 tool_choice_type: str = 'auto',
                 tools_choice_name: Optional[str] = None,
                 interpret_tool_use_output: bool = True,
+                with_memory: bool = True,
                 ):
         """Bla bla
 
         """
+        if not with_memory:
+            self._message_stack = MessageStack()
+
         self.tool_choice = {'type': tool_choice_type}
         if tools_choice_name:
             self.tool_choice['name'] = tools_choice_name
@@ -133,9 +139,11 @@ class Engine:
             role=response.role,
             content=response.content,)
         )
+        print(f'agent: {self.name}')
 
         for message in response.content:
             if isinstance(message, ToolUseBlock):
+                print(f'  tool use: {message.name}')
                 tool_output = self.tool_set(message.name, **message.input)
                 tool_call_id = message.id
                 tool_outputs.append((tool_call_id, tool_output))
