@@ -1,4 +1,4 @@
-"""Agents that define an engine with system prompt and optional tools
+"""The main place where agents are created and configured.
 
 """
 import os
@@ -36,13 +36,27 @@ def build_agent(
         name: str,
         tools: Optional[ToolSet] = None,
         system_prompt_kwargs: Optional[Dict] = None,
-):
-    """Build an agent with a system prompt and optional tools"""
+) -> Engine:
+    """Build an agent with a system prompt and optional tools
+
+    Args:
+        api_key_env_var: The name of the environment variable that holds the API key to the LLM API
+        system_prompt_template: The name of the Jinja2 template file with the system prompt
+        model_name: The name of the LLM model to use for the agent
+        max_tokens: The maximum number of tokens to generate
+        temperature: The temperature to use for generation
+        name: The name of the agent, used for logging
+        tools: The tool set to include with the agent
+        system_prompt_kwargs: The keyword arguments to pass to the system prompt template in case the
+            jinja template includes variables
+
+    """
     system_prompt_template = Environment(
         loader=FileSystemLoader(PROMPT_FOLDER),
     ).get_template(system_prompt_template)
     if system_prompt_kwargs is None:
         system_prompt_kwargs = {}
+
     return Engine(
         name=name,
         api_key_env_var=api_key_env_var,
@@ -56,6 +70,8 @@ def build_agent(
     )
 
 
+#
+# Instantiate the core components of tools to be used by the agents.
 tfl_client = TFLClient(env_var_app_key='TFL_API_KEY')
 planner = Planner(
     planner=JourneyPlannerSearch(tfl_client),
@@ -87,13 +103,15 @@ maker = JourneyMaker(
 map_drawer = MapDrawer()
 
 
+#
+# Instantiate the various sub-task agents, which are forms of LLM engines.
 agent_handle_preferences_and_settings = build_agent(
     name='agent to handle preference settings',
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='preferences_and_settings.j2',
     model_name='claude-3-haiku-20240307',
     max_tokens=1000,
-    temperature=0.7,
+    temperature=0.1,
     tools=JourneyMakerToolSet(
         maker=maker,
         tools_to_include=('set_default_journey_parameters',),
@@ -106,7 +124,7 @@ agent_handle_journey_plans = build_agent(
     system_prompt_kwargs=user_0.get('user location short-hands', None),
     model_name='claude-3-haiku-20240307',
     max_tokens=1000,
-    temperature=0.7,
+    temperature=0.1,
     tools=JourneyMakerToolSet(
         maker=maker,
         tools_to_include=('compute_journey_plans',
@@ -120,7 +138,7 @@ agent_handle_output_artefacts = build_agent(
     system_prompt_template='output_artefacts.j2',
     model_name='claude-3-haiku-20240307',
     max_tokens=1000,
-    temperature=0.7,
+    temperature=0.1,
     tools=OutputArtefactsToolSet(
         drawer=map_drawer,
         maker=maker,
@@ -131,6 +149,9 @@ agent_handle_output_artefacts = build_agent(
 )
 
 
+#
+# Instantiate the agent that will route requests to the appropriate sub-task agent as well as
+# speak with the principal.
 date_now_in_london = datetime.now(pytz.timezone('Europe/London'))
 date_str = date_now_in_london.strftime('%Y-%m-%d')
 agent_router = build_agent(
@@ -144,13 +165,15 @@ agent_router = build_agent(
     },
     model_name='claude-3-5-sonnet-20241022',
     max_tokens=1000,
-    temperature=0.7,
+    temperature=0.5,
     tools=SubTaskAgentToolSet(
         subtask_agents={
             'preferences_and_settings': agent_handle_preferences_and_settings,
             'journey_planner': agent_handle_journey_plans,
             'output_artefacts': agent_handle_output_artefacts,
         },
-        tools_to_include=('preferences_and_settings', 'journey_planner', 'output_artefacts'),
+        tools_to_include=('preferences_and_settings',
+                          'journey_planner',
+                          'output_artefacts'),
     ),
 )
