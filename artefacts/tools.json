@@ -22,6 +22,39 @@
     }
   },
   {
+    "name": "create_ics_file_for_plan",
+    "description": "Create an ICS file for one (and only one) specific journey plan, wherein the ICS file is created for the journey plan. The ICS file can be used to import the journey plan into a calendar application.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "journey_index": {
+          "type": "integer",
+          "description": "The index of the journey which plans to retrieve"
+        },
+        "plan_index": {
+          "type": "integer",
+          "description": "The index of the plan to retrieve and create an ICS file for"
+        },
+        "description": {
+          "type": "string",
+          "description": "The free-text description of the journey plan to be included in the ICS file. This should be fulsome and include things like the mode of travel, the bus numbers, tube types etc if that is part of the plan"
+        },
+        "event_name": {
+          "type": "string",
+          "description": "The brief and descriptive name of the event to be included in the ICS file"
+        },
+        "file_attachments": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "description": "The list of file paths to be attached to the ICS file"
+            }
+        }
+      },
+      "required": ["journey_index", "plan_index", "description"]
+    }
+  },
+  {
     "name": "get_computed_journey",
     "description": "Get the computed journey based on a journey plan index. Note that this tool can only be used after a journey plan has been computed.",
     "input_schema": {

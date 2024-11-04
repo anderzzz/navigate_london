@@ -20,6 +20,7 @@ from tfl_api import (
 )
 from artefacts import (
     MapDrawer,
+    CalendarEventMakerForPlan,
     OutputArtefactsToolSet,
 )
 
@@ -101,6 +102,10 @@ maker = JourneyMaker(
     )
 )
 map_drawer = MapDrawer()
+calendar_maker = CalendarEventMakerForPlan(
+    file_path=os.path.join(os.path.dirname(__file__), 'calendar_event.ics'),
+    default_event_name='Generated Journey Plan',
+)
 
 
 #
@@ -136,13 +141,16 @@ agent_handle_output_artefacts = build_agent(
     name='agent to generate output artifacts',
     api_key_env_var='ANTHROPIC_API_KEY',
     system_prompt_template='output_artefacts.j2',
-    model_name='claude-3-haiku-20240307',
+    model_name='claude-3-5-sonnet-20241022',
+#    model_name='claude-3-haiku-20240307',
     max_tokens=1000,
     temperature=0.1,
     tools=OutputArtefactsToolSet(
         drawer=map_drawer,
+        calendar_maker=calendar_maker,
         maker=maker,
         tools_to_include=('draw_map_for_plan',
+                          'create_ics_file_for_plan',
                           'get_computed_journey',
                           'get_computed_journey_plan'),
     )
