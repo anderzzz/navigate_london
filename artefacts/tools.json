@@ -20,5 +20,37 @@
       },
       "required": ["journey_index", "plan_index"]
     }
+  },
+  {
+    "name": "get_computed_journey",
+    "description": "Get the computed journey based on a journey plan index. Note that this tool can only be used after a journey plan has been computed.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "journey_index": {
+          "type": "integer",
+          "description": "The index of the journey which plans to retrieve"
+        }
+      },
+      "required": ["journey_index"]
+    }
+  },
+  {
+    "name": "get_computed_journey_plan",
+    "description": "Get the specific plan for a specific computed journey based on a journey plan index and a plan index. Note that this tool can only be used after a journey plan has been computed.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "journey_index": {
+          "type": "integer",
+          "description": "The index of the journey which plans to retrieve"
+        },
+        "plan_index": {
+          "type": "integer",
+          "description": "The index of the plan to retrieve"
+        }
+      },
+      "required": ["journey_index", "plan_index"]
+    }
   }
 ]
