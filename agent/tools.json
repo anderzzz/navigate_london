@@ -29,7 +29,7 @@
   },
   {
     "name": "output_artefacts",
-    "description": "Generate the output artefacts for the journey planner, which may illustrate with maps and otherwise inform the user of the journey plan.",
+    "description": "Generate the output artefacts for the journey planner, which communicate the journey plan to the user. Artefacts this tool can create are (1) map of London with the travel path drawn on it; (2) ICS file (a calendar file) that can be imported into the user's calendar; (3) detailed free text of the steps of the journey plan.",
     "input_schema": {
       "type": "object",
       "properties": {

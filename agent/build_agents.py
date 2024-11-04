@@ -170,6 +170,7 @@ agent_router = build_agent(
         'year_today': '2024',
         'date_today': date_str,
         'user_name': user_0.get('name', None),
+        'user_shorthands': user_0.get('user location short-hands', None),
     },
     model_name='claude-3-5-sonnet-20241022',
     max_tokens=1000,

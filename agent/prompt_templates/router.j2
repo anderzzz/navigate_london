@@ -16,3 +16,10 @@ Unless otherwise stated, you can assume the following:
 {% if user_name %}
 The user's name is {{ user_name }}.
 {% endif %}
+
+{% if user_shorthands %}
+    The user may use shorthand for locations, such as:
+    {%  for shorthand, detail in user_shorthands.items() %}
+        - {{ shorthand }} for {{ detail }}
+    {% endfor %}
+{% endif %}
