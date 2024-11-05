@@ -57,7 +57,9 @@ class MessageStack:
 
 
 class Engine:
-    """Bla bla
+    """The main object to interact with the Anthropic API.
+
+    The `process` method handles the interactions with input prompts.
 
     """
     def __init__(self,
@@ -91,7 +93,17 @@ class Engine:
                 interpret_tool_use_output: bool = True,
                 with_memory: bool = True,
                 ):
-        """Bla bla
+        """Process the input prompt and return the output.
+
+        Args:
+            input_prompt: The input prompt to the agent
+            input_structured: The structured input data, which enable the caller to the agent to pass structured data
+                to be included in the text sent to the LLM model
+            tool_choice_type: The type of tool choice to use
+            tools_choice_name: The name of the tool to use
+            interpret_tool_use_output: Whether to interpret the tool output; note that this leads to recursive calls to
+                the LLM model until it returns a message without tool use
+            with_memory: Whether to keep the memory of the conversation between process calls
 
         """
         if not with_memory:
@@ -160,6 +172,8 @@ class Engine:
                 ]
             ))
 
+        # If tool was used, the AI can optionally interpret the tool output by invoking itself recursively,
+        # but with the tool output as part of its input
         if response.stop_reason == 'tool_use':
             if self.interpret_tool_use_output:
                 return self.what_does_ai_say()
