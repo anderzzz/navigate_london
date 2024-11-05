@@ -1,4 +1,4 @@
-"""Select APIs for the TFL API.
+"""The objects to plan journeys using the TfL Journey API endpoint.
 
 """
 from typing import Sequence, Optional, Dict, Union, Tuple, Any, Generator, List
@@ -12,6 +12,7 @@ from tfl_api import TFLClient
 #
 # Search parameters and functionality for the Journey Planner
 #
+
 class Mode(str, Enum):
     """The modes of transportation."""
     BUS = "bus"
@@ -93,6 +94,13 @@ def to_camel(s):
 
 
 class JourneyPlannerSearchParams(BaseModel):
+    """Parameters for a journey search. This comprises most of the parameters
+    to the TfL Journey API endpoint and is a Pydantic model, thus enforcing validations.
+
+    Note that the TfL API parameters are in camel case, while this model uses snake case, hence the
+    alias generator.
+
+    """
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     national_search: Optional[bool] = None
@@ -152,6 +160,9 @@ class JourneyPlannerSearchParams(BaseModel):
 
 
 class JourneyPlannerSearch:
+    """Search for a journey between two locations, given a set of preferences and times.
+
+    """
     def __init__(self, client: TFLClient):
         self.client = client
         self._endpoint = 'Journey/JourneyResults'
@@ -163,6 +174,15 @@ class JourneyPlannerSearch:
                  params: JourneyPlannerSearchParams,
                  ):
         """Plan a journey between two locations, given a set of preferences and times.
+
+        Note that locations can be WGS84 coordinates expressed as "lat,long", a UK postcode,
+        a Naptan (StopPoint) id, an ICS StopId, or a free-text string. The free-text string that
+        the TfL API typically handles are points of interests, neighbourhoods and station names.
+
+        Args:
+            from_loc: The starting location of the journey.
+            to_loc: The destination location of the journey.
+            params: The additional parameters for the journey search.
         
         """
         from_loc = self._normalize_loc(from_loc)
@@ -252,6 +272,12 @@ def _get_nested_value(d: Dict, path: Sequence[str]) -> Any:
 class JourneyPlannerSearchPayloadProcessor:
     """Process the payload from the journey planner.
 
+    Args:
+        matching_threshold: The threshold for matching a location in the disambiguation options. Range is 0-1000; it is
+            rare that values below 900 are useful.
+        leg_data_to_retrieve: The data to retrieve for each leg.
+        step_data_to_retrieve: The data to retrieve for each step in a leg.
+
     """
     def __init__(self,
                  matching_threshold: float = 900.0,
@@ -278,7 +304,9 @@ class JourneyPlannerSearchPayloadProcessor:
         """Process a non-ambiguous payload from the journey planner.
 
         Select items from the nested and complex payload are extracted and yielded as a dictionary for
-        each journey alternative.
+        each journey alternative. The data that is retrieved are defined by the `leg_data_to_retrieve`
+        and `step_data_to_retrieve` parameters, and are subset of the data fields defined in the
+        constants `JOURNEY_MAIN_DATA`, `JOURNEY_LEG_DATA`, and `JOURNEY_STEP_DATA`.
 
         """
         for journey in payload['journeys']:
@@ -323,13 +351,15 @@ class JourneyPlannerSearchPayloadProcessor:
 
         return ret
 
-    def journey_vectors(self, payload: Dict):
-        """Retrieve the journey vectors from the payload.
+    def _disambiguate_loc_type(self, type_: str, payload: Dict) -> List:
+        """Determine if there are disambiguation options for a location type in the payload, and if so,
+        extract the disambiguation options if the matching threshold condition is met.
+
+        This method relies on knowledge of the structure of the disambiguation payload the TfL API returns.
+        The payload reflects that one or both of the starting and destination locations can be ambiguous,
+        so the output can vary in what key-value pairs are present.
 
         """
-        pass
-
-    def _disambiguate_loc_type(self, type_: str, payload: Dict):
         ret = []
         if f'{type_}LocationDisambiguation' in payload:
             if payload[f'{type_}LocationDisambiguation']['matchStatus'] in self.MATCH_STATUS_TO_DISAMBIGUATE:
@@ -344,13 +374,22 @@ class JourneyPlannerSearchPayloadProcessor:
         return [x for x in ret if x is not None]
 
     def disambiguate(self, payload: Dict):
-        """Disambiguate the payload from the journey planner.
+        """Disambiguate the payload from the journey planner. Disambiguated locations are retrieved through
+        the `transform_loc` method.
+
+        If a location sent to the TfL API is ambiguous, the API will return a list of options to choose from.
+        This method extracts the disambiguation options such that new searches can be performed.
 
         """
         self._loc_from = self._disambiguate_loc_type('from', payload)
         self._loc_to = self._disambiguate_loc_type('to', payload)
 
-    def transform_loc(self, type_: str, loc):
+    def transform_loc(self, type_: str, loc) -> List:
+        """Transform a search location to disambiguated locations, if necessary. If no disambiguation is
+        needed, the original location is returned as a one-element list. If disambiguation is needed, the
+        disambiguated locations are returned.
+
+        """
         try:
             val = getattr(self, f'_loc_{type_}')
         except AttributeError:

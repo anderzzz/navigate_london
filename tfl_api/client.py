@@ -13,6 +13,9 @@ _BASE_URL_TFL = 'https://api.tfl.gov.uk/'
 class TFLClient:
     """Basic client to interact with the TFL API.
 
+    Args:
+        env_var_app_key: The name of the environment variable that holds the app key for the TFL API
+
     """
     def __init__(self, env_var_app_key):
         self.app_key = os.getenv(env_var_app_key)
