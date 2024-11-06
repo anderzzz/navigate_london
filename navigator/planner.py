@@ -199,7 +199,8 @@ class Journey:
 
 
 class JourneyMaker:
-    """Bla bla
+    """Constructs the journeys that fits two given locations. Multiple journeys
+    are possible since the TfL API can disambiguate locations.
 
     """
     def __init__(self,

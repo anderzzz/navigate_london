@@ -2,7 +2,7 @@
 
 """
 import os
-from typing import Dict, Any, Sequence, Optional, List
+from typing import Sequence, Optional
 import json
 
 from base import ToolSet
@@ -13,7 +13,7 @@ TOOL_SPEC_FILE = os.path.join(os.path.dirname(__file__), 'tools.json')
 
 
 class JourneyMakerToolSet(ToolSet):
-    """Bla bla
+    """Toolset for journey maker, means to invoke the TfL API.
 
     """
     def __init__(self,

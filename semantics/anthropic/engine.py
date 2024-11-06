@@ -135,7 +135,6 @@ class Engine:
                 text_out = added_messages.pull_tool_result()
             return '\n\n'.join([text for text in text_out])
 
-
     def what_does_ai_say(self):
         tool_outputs = []
         response = self.client.messages.create(
