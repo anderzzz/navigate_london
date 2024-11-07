@@ -1,4 +1,4 @@
-"""Bla bla
+"""Output artifacts tool set.
 
 """
 import os
@@ -14,7 +14,9 @@ TOOL_SPEC_FILE = os.path.join(os.path.dirname(__file__), 'tools.json')
 
 
 class OutputArtefactsToolSet(ToolSet):
-    """Bla bla
+    """Given that a journey has been computed, this tool set provides means to output artefacts.
+
+    The journey data is available from the `JourneyMaker` object and requires two indices to access.
 
     """
     def __init__(self,
