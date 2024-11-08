@@ -77,7 +77,7 @@ tfl_client = TFLClient(env_var_app_key='TFL_API_KEY')
 planner = Planner(
     planner=JourneyPlannerSearch(tfl_client),
     payload_processor=JourneyPlannerSearchPayloadProcessor(
-        matching_threshold=990.0,
+        matching_threshold=800.0,
         leg_data_to_retrieve=(
             'start_date_time',
             'end_date_time',

@@ -41,7 +41,7 @@ class JourneyMakerToolSet(ToolSet):
             **kwargs,
         )
         return json.dumps({
-            'number of journeys planned': len(self.maker),
+            'total number of planned journeys available': len(self.maker),
             'journey meta data': [
                 {
                     'journey index': k,

@@ -395,6 +395,9 @@ class JourneyPlannerSearchPayloadProcessor:
         except AttributeError:
             raise ValueError(f'Unknown location type: {type_}')
 
+        if len(val) == 0:
+            raise ValueError(f'No disambiguation options found for location type {type_}')
+
         if val[0] is True:
             return [loc]
         elif val[0] is False:

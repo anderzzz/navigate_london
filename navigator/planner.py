@@ -213,7 +213,7 @@ class JourneyMaker:
         self.default_params = default_params
 
         self.is_multiple_journeys = False
-        self._journey = None
+        self._journey = []
 
     @property
     def default_params(self):
@@ -256,4 +256,4 @@ class JourneyMaker:
                 self.is_multiple_journeys = False
                 plans = [plans]
 
-        self._journey = [Journey(plans=_plans) for _plans in plans]
+        self._journey.extend([Journey(plans=_plans) for _plans in plans])
