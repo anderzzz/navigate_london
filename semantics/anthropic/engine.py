@@ -118,6 +118,8 @@ class Engine:
             structured_content_str = json.dumps(input_structured)
             input_prompt += f'\n\n=== Structured input data ===\n{structured_content_str}\n=== End of structured input data ==='
 
+        print (f'input_prompt: {input_prompt}')
+
         self._message_stack.append(MessageParam(
             role='user',
             content=[TextBlock(
