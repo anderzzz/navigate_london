@@ -1,7 +1,7 @@
 # AI Assistant Prototype for London Transit Planning
 Transport for London (TfL) publishes a number of APIs for public transit in London, UK. The code in this repo is a prototype AI assistant comprising four AI agents that through tool-use gathers data from the TfL APIs and presents the results in various ways (text summary, map drawings, calendar reminders). The tool-using AIs are all based on Anthropic's LLM APIs.
 
-The prototype is discussed in detail in the following blog post: **INSERT URL**
+The prototype is discussed in detail in the following [article in Towards AI.](https://pub.towardsai.net/london-commute-agent-from-concepts-to-pretty-maps-6b2a0a28dcc8)
 
 The prototype can be run on command-line, see the script `main_agents.py`.
 
